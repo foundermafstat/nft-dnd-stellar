@@ -1,0 +1,58 @@
+
+> client@0.1.0 build
+> next build
+
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+Error: Can't resolve '../../../../node_modules/tw-animate-css/dist/tw-animate.css' in 'C:\Projects\nft-dnd-stellar\client\src\app'
+    [at finishWithoutResolve (C:\Projects\nft-dnd-stellar\node_modules\enhanced-resolve\lib\Resolver.js:586:18)]
+    [at C:\Projects\nft-dnd-stellar\node_modules\enhanced-resolve\lib\Resolver.js:678:14]
+    [at C:\Projects\nft-dnd-stellar\node_modules\enhanced-resolve\lib\Resolver.js:739:5]
+    [at eval (eval at create (C:\Projects\nft-dnd-stellar\node_modules\tapable\lib\HookCodeFactory.js:31:10), <anonymous>:15:1)]
+    [at C:\Projects\nft-dnd-stellar\node_modules\enhanced-resolve\lib\Resolver.js:739:5]
+    [at eval (eval at create (C:\Projects\nft-dnd-stellar\node_modules\tapable\lib\HookCodeFactory.js:31:10), <anonymous>:27:1)]
+    [at C:\Projects\nft-dnd-stellar\node_modules\enhanced-resolve\lib\DescriptionFilePlugin.js:89:43]
+    [at C:\Projects\nft-dnd-stellar\node_modules\enhanced-resolve\lib\Resolver.js:739:5]
+    [at eval (eval at create (C:\Projects\nft-dnd-stellar\node_modules\tapable\lib\HookCodeFactory.js:31:10), <anonymous>:15:1)]
+    [at C:\Projects\nft-dnd-stellar\node_modules\enhanced-resolve\lib\Resolver.js:739:5] {
+  details: "resolve '../../../../node_modules/tw-animate-css/dist/tw-animate.css' in 'C:\\Projects\\nft-dnd-stellar\\client\\src\\app'\n" +
+    '  using description file: C:\\Projects\\nft-dnd-stellar\\client\\package.json (relative path: ./src/app)\n' +
+    '    No description file found in C:\\Projects\\node_modules\\tw-animate-css\\dist or above\n' +
+    '    no extension\n' +
+    "      C:\\Projects\\node_modules\\tw-animate-css\\dist\\tw-animate.css doesn't exist\n" +
+    '    .css\n' +
+    "      C:\\Projects\\node_modules\\tw-animate-css\\dist\\tw-animate.css.css doesn't exist\n" +
+    '    as directory\n' +
+    "      C:\\Projects\\node_modules\\tw-animate-css\\dist\\tw-animate.css doesn't exist"
+}
+
+> Build error occurred
+Error: Turbopack build failed with 1 errors:
+./client/src/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: C:\Projects\nft-dnd-stellar\client\src\app\globals.css:1:1: Can't resolve '../../../../node_modules/tw-animate-css/dist/tw-animate.css' in 'C:\Projects\nft-dnd-stellar\client\src\app'
+    at Input.error (node_modules/postcss/lib/input.js:135:16) [C:\Projects\nft-dnd-stellar\client\.next\build\chunks\node_modules_fe693df6._.js:4651:22]
+    at Root.error (node_modules/postcss/lib/node.js:146:32) [C:\Projects\nft-dnd-stellar\client\.next\build\chunks\node_modules_fe693df6._.js:928:38]
+    [at Object.Once (C:\Projects\nft-dnd-stellar\node_modules\@tailwindcss\postcss\dist\index.js:10:6913)]
+    [at process.processTicksAndRejections (node:internal/process/task_queues:105:5)]
+    at async LazyResult.runAsync (node_modules/postcss/lib/lazy-result.js:293:11) [C:\Projects\nft-dnd-stellar\client\.next\build\chunks\node_modules_fe693df6._.js:6206:21]
+    at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34) [C:\Projects\nft-dnd-stellar\client\.next\build\chunks\[root-of-the-server]__860674ff._.js:146:36]
+    at async run (turbopack:///[turbopack-node]/ipc/evaluate.ts:92:23) [C:\Projects\nft-dnd-stellar\client\.next\build\chunks\[root-of-the-server]__f81fd433._.js:443:31]
+
+Import trace:
+  Client Component Browser:
+    ./client/src/app/globals.css [Client Component Browser]
+    ./client/src/app/layout.tsx [Server Component]
+
+
+    at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34) [C:\Projects\nft-dnd-stellar\client\.next\build\chunks\[root-of-the-server]__860674ff._.js:146:36])
+    at async run (turbopack:///[turbopack-node]/ipc/evaluate.ts:92:23) [C:\Projects\nft-dnd-stellar\client\.next\build\chunks\[root-of-the-server]__f81fd433._.js:443:31])
+npm error Lifecycle script `build` failed with error:
+npm error code 1
+npm error path C:\Projects\nft-dnd-stellar\client
+npm error workspace client@0.1.0
+npm error location C:\Projects\nft-dnd-stellar\client
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c next build

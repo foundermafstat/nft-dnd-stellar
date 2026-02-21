@@ -6,6 +6,7 @@ import multer from 'multer';
 
 import { supabase } from './db/supabase';
 import { uploadToIPFS } from './services/ipfs';
+import { upsertPlayerByWallet } from './db/playerQueries';
 
 // Load environment variables from the root .env file
 dotenv.config({ path: '../.env' });
@@ -26,6 +27,21 @@ const openai = new OpenAI({
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'NFT-DND Server is running' });
+});
+
+app.post('/api/auth/wallet', async (req, res) => {
+    const { publicKey } = req.body;
+
+    if (!publicKey) {
+        return res.status(400).json({ error: 'Missing publicKey' });
+    }
+
+    try {
+        const player = await upsertPlayerByWallet(publicKey);
+        res.json({ success: true, player });
+    } catch (error: any) {
+        res.status(500).json({ error: 'Auth failed', details: error.message });
+    }
 });
 
 app.post('/api/upload', upload.single('file'), async (req, res) => {
