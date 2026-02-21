@@ -39,22 +39,22 @@ export default function BottomNav() {
         <div className="relative w-full z-50">
             {/* The Overlay Content Area that slides up FROM the nav */}
             <div
-                className={`absolute bottom-full left-0 right-0 bg-[#0a0806]/95 border-t border-amber-900/40 backdrop-blur-md transition-all duration-300 ease-in-out text-stone-300 shadow-[0_-10px_40px_rgba(0,0,0,0.8)] ${activeTab ? 'h-[60vh] opacity-100 p-6' : 'h-0 opacity-0 overflow-hidden pt-0 pb-0'
+                className={`absolute bottom-full left-0 right-0 bg-background/95 border-t border-border backdrop-blur-md transition-all duration-300 ease-in-out text-foreground shadow-2xl ${activeTab ? 'h-[60vh] opacity-100 p-6' : 'h-0 opacity-0 overflow-hidden pt-0 pb-0'
                     }`}
             >
                 <div className="max-w-7xl mx-auto h-full flex flex-col">
-                    {activeTab === 'inventory' && <h2 className="text-2xl font-bold font-serif text-amber-500 mb-4">Inventory</h2>}
-                    {activeTab === 'combat' && <h2 className="text-2xl font-bold font-serif text-amber-600 mb-4">Combat Log</h2>}
-                    {activeTab === 'map' && <h2 className="text-2xl font-bold font-serif text-sky-600 mb-4">World Map</h2>}
-                    {activeTab === 'lore' && <h2 className="text-2xl font-bold font-serif text-emerald-600 mb-4">Lore Journal</h2>}
-                    {activeTab === 'settings' && <h2 className="text-2xl font-bold font-serif text-stone-400 mb-4">Game Settings</h2>}
+                    {activeTab === 'inventory' && <h2 className="text-2xl font-bold font-serif text-foreground mb-4">Inventory</h2>}
+                    {activeTab === 'combat' && <h2 className="text-2xl font-bold font-serif text-foreground mb-4">Combat Log</h2>}
+                    {activeTab === 'map' && <h2 className="text-2xl font-bold font-serif text-foreground mb-4">World Map</h2>}
+                    {activeTab === 'lore' && <h2 className="text-2xl font-bold font-serif text-foreground mb-4">Lore Journal</h2>}
+                    {activeTab === 'settings' && <h2 className="text-2xl font-bold font-serif text-foreground mb-4">Game Settings</h2>}
 
-                    <p className="text-stone-500 font-serif">Content for {activeTab} goes here. This overlay covers the real-time canvas beneath it without stopping the background loop.</p>
+                    <p className="text-muted-foreground font-serif">Content for {activeTab} goes here. This overlay covers the real-time canvas beneath it without stopping the background loop.</p>
                 </div>
             </div>
 
             {/* The Bottom Navigation Bar (Fixed bottom, full width) */}
-            <div className="w-full bg-[#050403] border-t border-amber-900/30 h-20 flex items-center px-6 shadow-[0_-5px_30px_rgba(0,0,0,0.9)] relative">
+            <div className="w-full bg-card border-t border-border h-20 flex items-center px-6 shadow-2xl relative">
 
                 {/* Center Tabs */}
                 <div className="absolute left-1/2 -translate-x-1/2 flex gap-8 items-center h-full">
@@ -66,13 +66,13 @@ export default function BottomNav() {
                                 key={Tab.id}
                                 onClick={() => toggleTab(Tab.id)}
                                 disabled={isDisabled}
-                                className={`flex flex-col items-center gap-1 transition-all duration-200 mt-2 h-full justify-center ${isDisabled ? 'text-stone-800 cursor-not-allowed hidden' :
+                                className={`flex flex-col items-center gap-1 transition-all duration-200 mt-2 h-full justify-center ${isDisabled ? 'text-muted cursor-not-allowed hidden' :
                                     isActive
-                                        ? 'text-amber-500 -translate-y-1'
-                                        : 'text-stone-500 hover:text-amber-200 hover:-translate-y-1'
+                                        ? 'text-primary -translate-y-1'
+                                        : 'text-muted-foreground hover:text-primary hover:-translate-y-1'
                                     }`}
                             >
-                                <Tab.icon className={`w-6 h-6 ${isActive ? 'drop-shadow-[0_0_10px_rgba(245,158,11,0.6)]' : ''}`} />
+                                <Tab.icon className={`w-6 h-6 ${isActive ? 'drop-shadow-md' : ''}`} />
                                 <span className="text-[10px] uppercase font-bold tracking-widest">{Tab.label}</span>
                             </button>
                         )
@@ -85,24 +85,24 @@ export default function BottomNav() {
                         <FreighterAuthButton onAuthenticated={setPlayerId} />
                     ) : (
                         <DropdownMenu>
-                            <DropdownMenuTrigger className="flex items-center gap-2 bg-[#14100c] border border-amber-900/30 hover:bg-[#1f1912] rounded-lg px-4 py-2 font-serif text-sm transition-colors text-amber-100 outline-none">
-                                <Wallet className="w-4 h-4 text-amber-600" />
+                            <DropdownMenuTrigger className="flex items-center gap-2 bg-muted border border-border hover:bg-accent hover:text-accent-foreground rounded-lg px-4 py-2 font-serif text-sm transition-colors text-foreground outline-none">
+                                <Wallet className="w-4 h-4 text-primary" />
                                 <span className="max-w-[100px] truncate">{playerId}</span>
-                                <ChevronUp className="w-4 h-4 text-stone-500" />
+                                <ChevronUp className="w-4 h-4 text-muted-foreground" />
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" sideOffset={12} className="w-56 bg-[#0a0806] border-amber-900/30 text-stone-300">
-                                <DropdownMenuLabel className="text-amber-500/50 font-serif tracking-widest uppercase text-xs">My Account</DropdownMenuLabel>
-                                <DropdownMenuSeparator className="bg-amber-900/20" />
-                                <DropdownMenuItem className="focus:bg-[#14100c] focus:text-amber-400 cursor-pointer font-sans">
+                            <DropdownMenuContent align="end" sideOffset={12} className="w-56 bg-popover border-border text-popover-foreground">
+                                <DropdownMenuLabel className="text-muted-foreground font-serif tracking-widest uppercase text-xs">My Account</DropdownMenuLabel>
+                                <DropdownMenuSeparator className="bg-border" />
+                                <DropdownMenuItem className="focus:bg-accent focus:text-accent-foreground cursor-pointer font-sans">
                                     Profile
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="focus:bg-[#14100c] focus:text-amber-400 cursor-pointer font-sans">
+                                <DropdownMenuItem className="focus:bg-accent focus:text-accent-foreground cursor-pointer font-sans">
                                     Copy Wallet Address
                                 </DropdownMenuItem>
-                                <DropdownMenuSeparator className="bg-amber-900/20" />
+                                <DropdownMenuSeparator className="bg-border" />
                                 <DropdownMenuItem
                                     onClick={handleLogout}
-                                    className="focus:bg-red-950/30 focus:text-red-400 text-red-500/80 cursor-pointer font-sans"
+                                    className="focus:bg-destructive/20 focus:text-destructive text-destructive cursor-pointer font-sans"
                                 >
                                     <LogOut className="w-4 h-4 mr-2" />
                                     Disconnect

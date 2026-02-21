@@ -84,11 +84,12 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
             canvas.height = canvas.parentElement!.clientHeight;
 
             // Clear screen
-            ctx.fillStyle = '#0f172a'; // Deep slate blue background
+            const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--color-background') || '#1c1917';
+            ctx.fillStyle = bgColor; // Deep slate blue background
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // Draw Basic Grid for environmental scale
-            ctx.strokeStyle = 'rgba(71, 85, 105, 0.2)'; // Slate-500 fading
+            ctx.strokeStyle = 'rgba(150, 150, 150, 0.1)'; // Slate-500 fading
             ctx.lineWidth = 1;
             const gridSize = 50;
 
