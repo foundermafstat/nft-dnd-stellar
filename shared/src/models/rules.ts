@@ -92,3 +92,22 @@ export function calculateMaxInventorySlots(stats: CharacterStats, heroClass: Her
 export function xpForNextLevel(currentLevel: number): number {
     return currentLevel * 10;
 }
+
+// --- ANCESTRIES ---
+export enum Ancestry {
+    Dwarf = 'Dwarf',
+    Elf = 'Elf',
+    Goblin = 'Goblin',
+    Halfling = 'Halfling',
+    HalfOrc = 'HalfOrc',
+    Human = 'Human'
+}
+
+export const ANCESTRIES = {
+    [Ancestry.Dwarf]: { name: 'Dwarf', feature: 'Stout', description: '+2 HP at start. Roll hit points with advantage at every level.', languages: ['Common', 'Dwarvish'] },
+    [Ancestry.Elf]: { name: 'Elf', feature: 'Farsight', description: '+1 bonus to ranged weapon attacks or spellcasting checks.', languages: ['Common', 'Elvish', 'Sylvan'] },
+    [Ancestry.Goblin]: { name: 'Goblin', feature: 'Keen Senses', description: 'Cannot be caught by surprise.', languages: ['Common', 'Goblin'] },
+    [Ancestry.Halfling]: { name: 'Halfling', feature: 'Stealthy', description: 'Once per day, become invisible for 3 rounds.', languages: ['Common'] },
+    [Ancestry.HalfOrc]: { name: 'Half-Orc', feature: 'Mighty', description: '+1 to attack and damage rolls with melee weapons.', languages: ['Common', 'Orcish'] },
+    [Ancestry.Human]: { name: 'Human', feature: 'Ambitious', description: 'Gain one additional talent roll at 1st level.', languages: ['Common', 'One Random'] }
+};
