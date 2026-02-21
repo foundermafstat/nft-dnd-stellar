@@ -10,6 +10,7 @@ const openai_1 = __importDefault(require("openai"));
 const multer_1 = __importDefault(require("multer"));
 const supabase_1 = require("./db/supabase");
 const ipfs_1 = require("./services/ipfs");
+const playerQueries_1 = require("./db/playerQueries");
 // Load environment variables from the root .env file
 dotenv_1.default.config({ path: '../.env' });
 const app = (0, express_1.default)();
@@ -24,6 +25,19 @@ const openai = new openai_1.default({
 });
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'NFT-DND Server is running' });
+});
+app.post('/api/auth/wallet', async (req, res) => {
+    const { publicKey } = req.body;
+    if (!publicKey) {
+        return res.status(400).json({ error: 'Missing publicKey' });
+    }
+    try {
+        const player = await (0, playerQueries_1.upsertPlayerByWallet)(publicKey);
+        res.json({ success: true, player });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Auth failed', details: error.message });
+    }
 });
 app.post('/api/upload', upload.single('file'), async (req, res) => {
     if (!req.file) {
