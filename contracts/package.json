@@ -1,0 +1,13 @@
+{
+    "name": "contracts",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Stellar Soroban Smart Contracts for NFT-DND",
+    "scripts": {
+        "build": "cargo build --target wasm32v1-none --release",
+        "test": "cargo test",
+        "deploy:local": "stellar contract deploy --wasm target/wasm32v1-none/release/dnd_contract.wasm --source alice --network local",
+        "deploy:testnet": "stellar contract deploy --wasm target/wasm32v1-none/release/dnd_contract.wasm --source default --network testnet",
+        "bindings": "stellar contract bindings typescript --network testnet --contract-id <CONTRACT_ID> --output-dir ../client/src/contracts"
+    }
+}
