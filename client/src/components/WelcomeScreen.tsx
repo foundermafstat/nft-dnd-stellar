@@ -73,16 +73,16 @@ function PremiumCard({
             tag: 'bg-amber-500/10 text-amber-400 border-amber-500/30'
         },
         'Legendary': {
-            border: 'from-purple-400 via-purple-600 to-purple-900',
-            text: 'text-purple-300',
-            bg: 'bg-purple-950/20',
-            tag: 'bg-purple-500/10 text-purple-400 border-purple-500/30'
+            border: 'from-rose-500 via-red-700 to-red-950',
+            text: 'text-rose-300',
+            bg: 'bg-red-950/20',
+            tag: 'bg-red-500/10 text-red-400 border-red-500/30'
         },
         'Epic': {
-            border: 'from-cyan-400 via-cyan-600 to-cyan-900',
-            text: 'text-cyan-300',
-            bg: 'bg-cyan-950/20',
-            tag: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
+            border: 'from-emerald-400 via-emerald-700 to-emerald-950',
+            text: 'text-emerald-300',
+            bg: 'bg-emerald-950/20',
+            tag: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
         }
     };
 
@@ -101,7 +101,7 @@ function PremiumCard({
                     <div className={`absolute inset-0 rounded-2xl bg-gradient-to-b ${theme.border} opacity-50 z-0`}></div>
 
                     {/* Card Inner Background (Onyx/Obsidian texture simulation) */}
-                    <div className="absolute inset-[1px] rounded-[15px] bg-[#030408] z-10 overflow-hidden flex flex-col justify-end">
+                    <div className="absolute inset-[1px] rounded-[15px] bg-[#100c08] z-10 overflow-hidden flex flex-col justify-end">
                         {/* Noise Texture */}
                         <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
 
@@ -126,9 +126,9 @@ function PremiumCard({
                         <div className="flex justify-between items-center px-4 pt-4 pb-2 z-30">
                             <div className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border ${theme.tag} backdrop-blur-md`}>
                                 <Sparkles className="w-3 h-3" />
-                                <span className="text-[10px] font-mono tracking-widest uppercase font-bold">{rarity}</span>
+                                <span className="text-[10px] font-serif tracking-widest uppercase font-bold">{rarity}</span>
                             </div>
-                            <Icon className="w-5 h-5 text-slate-500/50 group-hover:text-white transition-colors duration-700" />
+                            <Icon className="w-5 h-5 text-stone-500/50 group-hover:text-stone-300 transition-colors duration-700" />
                         </div>
 
                         {/* Image Showcase Segment */}
@@ -155,11 +155,11 @@ function PremiumCard({
                             </h3>
 
                             <div className="flex items-center gap-2 mb-4">
-                                <span className="text-xs font-mono tracking-widest text-slate-500 uppercase">{type}</span>
+                                <span className="text-xs font-serif tracking-widest text-stone-500 uppercase">{type}</span>
                                 <div className="h-px w-8 bg-white/10"></div>
                             </div>
 
-                            <p className="text-sm text-slate-400 font-serif leading-relaxed line-clamp-3 group-hover:text-slate-300 transition-colors">
+                            <p className="text-sm text-stone-400 font-serif leading-relaxed line-clamp-3 group-hover:text-stone-300 transition-colors">
                                 {description}
                             </p>
                         </div>
@@ -178,7 +178,7 @@ interface WelcomeScreenProps {
 
 export default function WelcomeScreen({ onAuth }: WelcomeScreenProps) {
     return (
-        <div className="absolute inset-0 w-full h-full overflow-y-auto overflow-x-hidden bg-[#010103] text-slate-200 z-20 custom-scrollbar scroll-smooth selection:bg-amber-900 selection:text-white">
+        <div className="absolute inset-0 w-full h-full overflow-y-auto overflow-x-hidden bg-[#0a0806] text-stone-300 z-20 custom-scrollbar scroll-smooth selection:bg-amber-900/60 selection:text-amber-100">
 
             {/* --- HERO SECTION --- */}
             <section className="relative min-h-screen w-full flex flex-col items-center justify-center pointer-events-auto">
@@ -194,9 +194,9 @@ export default function WelcomeScreen({ onAuth }: WelcomeScreenProps) {
                         <source src="/videos/promo.mp4" type="video/mp4" />
                     </video>
                     {/* The crucial 60% gradient overlay from the bottom */}
-                    <div className="absolute inset-x-0 bottom-0 h-[60%] bg-gradient-to-t from-[#010103] to-transparent z-10 pointer-events-none"></div>
+                    <div className="absolute inset-x-0 bottom-0 h-[60%] bg-gradient-to-t from-[#0a0806] to-transparent z-10 pointer-events-none"></div>
                     {/* Subtle vignette for cinematic framing */}
-                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_50%,_#010103_100%)] z-10 pointer-events-none opacity-80"></div>
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_50%,_#0a0806_100%)] z-10 pointer-events-none opacity-80"></div>
                 </div>
 
                 {/* Hero Content */}
@@ -207,12 +207,12 @@ export default function WelcomeScreen({ onAuth }: WelcomeScreenProps) {
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-600"></span>
                             </span>
-                            <span className="text-[10px] sm:text-xs font-mono tracking-[0.3em] text-amber-500/80 uppercase">The Genesis Build</span>
+                            <span className="text-[10px] sm:text-xs font-serif tracking-[0.3em] text-amber-500/80 uppercase">The Genesis Build</span>
                         </div>
                     </FadeIn>
 
                     <FadeIn delay={300} direction="up">
-                        <h1 className="text-7xl md:text-8xl lg:text-[10rem] font-serif tracking-tighter mb-6 leading-[0.85] text-slate-100 drop-shadow-2xl">
+                        <h1 className="text-7xl md:text-8xl lg:text-[10rem] font-serif tracking-tighter mb-6 leading-[0.85] text-stone-200 drop-shadow-2xl">
                             FORGE YOUR<br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-b from-amber-200 via-amber-500 to-amber-900 italic pr-4">
                                 LEGACY
@@ -221,7 +221,7 @@ export default function WelcomeScreen({ onAuth }: WelcomeScreenProps) {
                     </FadeIn>
 
                     <FadeIn delay={500} direction="up">
-                        <p className="max-w-2xl text-lg md:text-2xl text-slate-400 font-serif leading-relaxed mb-12 drop-shadow-md">
+                        <p className="max-w-2xl text-lg md:text-2xl text-stone-400 font-serif leading-relaxed mb-12 drop-shadow-md">
                             A procedural high-fantasy RPG governed by an AI Game Master.
                             Claim immemorial artifacts and conquer boundless worlds.
                         </p>
@@ -238,7 +238,7 @@ export default function WelcomeScreen({ onAuth }: WelcomeScreenProps) {
                                 </div>
                             </div>
 
-                            <a href="#artifacts" className="group flex items-center gap-2 text-xs font-mono tracking-widest text-slate-500 hover:text-amber-500 transition-colors uppercase pt-2 sm:pt-0">
+                            <a href="#artifacts" className="group flex items-center gap-2 text-xs font-serif tracking-widest text-stone-500 hover:text-amber-500 transition-colors uppercase pt-2 sm:pt-0">
                                 Read the Tomes <ChevronDown className="w-4 h-4 group-hover:translate-y-2 transition-transform" />
                             </a>
                         </div>
@@ -247,17 +247,17 @@ export default function WelcomeScreen({ onAuth }: WelcomeScreenProps) {
             </section>
 
             {/* --- ARTIFACT SHOWCASE SECTION --- */}
-            <section id="artifacts" className="relative w-full py-32 bg-[#010103] z-20">
+            <section id="artifacts" className="relative w-full py-32 bg-[#0a0806] z-20">
                 {/* Subtle fantasy grid or magic circles in background could go here. For now, deep black. */}
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_#1a0f00_0%,_#010103_100%)] opacity-40"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_#1a0f00_0%,_#0a0806_100%)] opacity-40"></div>
 
                 <div className="max-w-7xl mx-auto px-6 relative z-10">
 
                     <div className="text-center mb-24">
                         <FadeIn delay={100} direction="up">
-                            <h2 className="text-4xl md:text-6xl font-serif text-slate-200 mb-6">Legendary Relics</h2>
+                            <h2 className="text-4xl md:text-6xl font-serif text-stone-200 mb-6 tracking-tight">Legendary Relics</h2>
                             <div className="w-24 h-px bg-gradient-to-r from-transparent via-amber-700 to-transparent mx-auto"></div>
-                            <p className="mt-6 text-slate-500 font-serif max-w-xl mx-auto text-lg leading-relaxed">
+                            <p className="mt-6 text-stone-400 font-serif max-w-xl mx-auto text-lg leading-relaxed">
                                 Items born of code, bound to the ledger. Discover dynamic NFTs that evolve through your conquests.
                             </p>
                         </FadeIn>
@@ -301,25 +301,25 @@ export default function WelcomeScreen({ onAuth }: WelcomeScreenProps) {
             </section>
 
             {/* --- CALL TO ACTION FOOTER --- */}
-            <footer className="relative w-full border-t border-amber-900/20 bg-black pb-16 pt-32 z-20 overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_#1a0f00_0%,_black_100%)] opacity-50"></div>
-                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-800/30 to-transparent"></div>
+            <footer className="relative w-full border-t border-amber-900/40 bg-[#050403] pb-16 pt-32 z-20 overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_#1a0f00_0%,_#050403_100%)] opacity-80"></div>
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-700/50 to-transparent"></div>
 
                 <div className="max-w-7xl mx-auto px-6 flex flex-col items-center relative z-10 text-center">
-                    <Shield className="w-16 h-16 text-amber-900/50 mb-10" />
-                    <h2 className="text-3xl md:text-4xl font-serif text-slate-200 mb-8">Ready to step into the dark?</h2>
+                    <Shield className="w-16 h-16 text-amber-800/60 mb-10 drop-shadow-[0_0_15px_rgba(217,119,6,0.3)]" />
+                    <h2 className="text-3xl md:text-4xl font-serif text-stone-200 mb-8 font-bold tracking-tight">Ready to step into the dark?</h2>
 
                     <div className="mb-20">
                         <FreighterAuthButton onAuthenticated={onAuth} />
                     </div>
 
-                    <div className="flex gap-10 text-[10px] font-mono tracking-[0.2em] text-slate-600 uppercase mb-16">
+                    <div className="flex gap-10 text-[10px] font-serif tracking-[0.2em] text-stone-600 uppercase mb-16">
                         <a href="#" className="hover:text-amber-500 transition-colors">Lore Database</a>
                         <a href="#" className="hover:text-amber-500 transition-colors">Contract Addr</a>
                         <a href="#" className="hover:text-amber-500 transition-colors">Chronicles</a>
                     </div>
 
-                    <p className="text-slate-800 font-mono text-[10px] tracking-widest uppercase">
+                    <p className="text-stone-800 font-serif text-[10px] tracking-widest uppercase">
                         © 2026 NFT-DND Stellar Project.
                     </p>
                 </div>
