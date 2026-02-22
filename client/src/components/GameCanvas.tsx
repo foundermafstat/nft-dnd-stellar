@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { renderLocation, renderPlayer, isTileWalkable } from '@/lib/tileRenderer';
+import { findPath, PathNode } from '@/lib/pathfinding';
 import { LocationMap, LocationExit, TileType } from 'shared';
 import TransitionModal from './TransitionModal';
 import Tooltip from './Tooltip';
@@ -39,6 +40,7 @@ interface GameCanvasProps {
 const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001';
 const TILE_SIZE = 36;
 const DEFAULT_LOCATION_ID = '00000000-0000-4000-a000-000000000001';
+const WALK_STEP_MS = 150; // Milliseconds per tile step
 
 export default function GameCanvas({ playerId }: GameCanvasProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -51,14 +53,21 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
     const [hoveredEntity, setHoveredEntity] = useState<HoveredEntity | null>(null);
     const [activeNpc, setActiveNpc] = useState<NpcNode | null>(null);
 
+    // Pathfinding state
+    const [previewPath, setPreviewPath] = useState<PathNode[]>([]);
+    const [isWalking, setIsWalking] = useState(false);
+
     const myId = useRef(playerId);
     const myColor = useRef(`hsl(${Math.floor(Math.random() * 360)}, 70%, 55%)`);
     const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
     const currentLocationId = useRef<string>(DEFAULT_LOCATION_ID);
     const npcsRef = useRef<NpcNode[]>([]);
+    const walkingRef = useRef(false); // Ref to detect cancellation inside walking loop
+    const myPosRef = useRef(myPos);
 
-    // Keep npcsRef in sync
+    // Keep refs in sync
     useEffect(() => { npcsRef.current = npcs; }, [npcs]);
+    useEffect(() => { myPosRef.current = myPos; }, [myPos]);
 
     // ── Parse location from API ────────────────────────────────────────
     function parseLocationFromAPI(loc: any): LocationMap {
@@ -102,6 +111,7 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
     async function loadLocationById(locId: string, spawnLabel?: string) {
         setLoading(true);
         setActiveNpc(null);
+        setPreviewPath([]);
         try {
             const res = await fetch(`${SERVER_URL}/api/location/${locId}`);
             const data = await res.json();
@@ -199,6 +209,13 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
         }
     }, [myPos]);
 
+    // ── NPC blocked tiles set ──────────────────────────────────────────
+    function getNpcBlockedTiles(): Set<string> {
+        const blocked = new Set<string>();
+        npcsRef.current.forEach(n => blocked.add(`${n.tile_x},${n.tile_y}`));
+        return blocked;
+    }
+
     // ── Check NPC at tile ──────────────────────────────────────────────
     function npcAtTile(tileX: number, tileY: number): NpcNode | undefined {
         return npcsRef.current.find(n => n.tile_x === tileX && n.tile_y === tileY);
@@ -215,7 +232,46 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
         return locationMap.exits.find(e => e.tile_x === tileX && e.tile_y === tileY);
     }
 
-    // ── Click-to-Move with NPC collision and dialog ────────────────────
+    // ── Walk along path step-by-step ───────────────────────────────────
+    async function walkPath(path: PathNode[]) {
+        if (path.length === 0) return;
+        setIsWalking(true);
+        walkingRef.current = true;
+        setPreviewPath([]);
+
+        for (let i = 0; i < path.length; i++) {
+            if (!walkingRef.current) break; // Cancelled (new click or location change)
+
+            const step = path[i];
+
+            // Check if an NPC appeared on the next tile (dynamic block)
+            if (npcAtTile(step.x, step.y)) break;
+
+            setMyPos({ tileX: step.x, tileY: step.y });
+
+            // Check exit at this step (not the last step - only trigger exit on last)
+            if (i === path.length - 1) {
+                const exit = findExitAtTile(step.x, step.y);
+                if (exit) {
+                    setPendingExit(exit);
+                    break;
+                }
+            }
+
+            // Persist position on each step
+            persistPosition(currentLocationId.current, step.x, step.y);
+
+            // Wait before next step
+            if (i < path.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, WALK_STEP_MS));
+            }
+        }
+
+        setIsWalking(false);
+        walkingRef.current = false;
+    }
+
+    // ── Click handler: pathfind & walk ──────────────────────────────────
     const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
         if (!locationMap || !canvasRef.current || pendingExit) return;
         const canvas = canvasRef.current;
@@ -223,37 +279,60 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
         const clickX = e.clientX - rect.left;
         const clickY = e.clientY - rect.top;
 
-        const camX = myPos.tileX * TILE_SIZE - canvas.width / 2 + TILE_SIZE / 2;
-        const camY = myPos.tileY * TILE_SIZE - canvas.height / 2 + TILE_SIZE / 2;
+        const camX = myPosRef.current.tileX * TILE_SIZE - canvas.width / 2 + TILE_SIZE / 2;
+        const camY = myPosRef.current.tileY * TILE_SIZE - canvas.height / 2 + TILE_SIZE / 2;
 
         const tileX = Math.floor((clickX + camX) / TILE_SIZE);
         const tileY = Math.floor((clickY + camY) / TILE_SIZE);
 
+        // Cancel current walk if clicking while moving
+        if (walkingRef.current) {
+            walkingRef.current = false;
+        }
+
         // Check if clicking an NPC when adjacent → open dialog
         const clickedNpc = npcAtTile(tileX, tileY);
-        if (clickedNpc && isAdjacent(myPos.tileX, myPos.tileY, tileX, tileY)) {
+        if (clickedNpc && isAdjacent(myPosRef.current.tileX, myPosRef.current.tileY, tileX, tileY)) {
             setActiveNpc(clickedNpc);
             return;
         }
 
-        // Can't walk onto NPC tiles
-        if (clickedNpc) return;
-
-        // Exit check
-        const exit = findExitAtTile(tileX, tileY);
-        if (exit) {
-            setMyPos({ tileX, tileY });
-            setPendingExit(exit);
+        // If clicking an NPC that's NOT adjacent, pathfind to adjacent tile
+        if (clickedNpc) {
+            const adjacentTiles = [
+                { x: tileX - 1, y: tileY }, { x: tileX + 1, y: tileY },
+                { x: tileX, y: tileY - 1 }, { x: tileX, y: tileY + 1 },
+            ];
+            let bestPath: PathNode[] = [];
+            const blocked = getNpcBlockedTiles();
+            for (const adj of adjacentTiles) {
+                if (!isTileWalkable(locationMap, adj.x, adj.y)) continue;
+                if (blocked.has(`${adj.x},${adj.y}`)) continue;
+                const p = findPath(locationMap, myPosRef.current.tileX, myPosRef.current.tileY, adj.x, adj.y, blocked);
+                if (p.length > 0 && (bestPath.length === 0 || p.length < bestPath.length)) {
+                    bestPath = p;
+                }
+            }
+            if (bestPath.length > 0) {
+                walkPath(bestPath).then(() => {
+                    // After walking, check if now adjacent
+                    if (isAdjacent(myPosRef.current.tileX, myPosRef.current.tileY, tileX, tileY)) {
+                        setActiveNpc(clickedNpc);
+                    }
+                });
+            }
             return;
         }
 
-        if (isTileWalkable(locationMap, tileX, tileY)) {
-            setMyPos({ tileX, tileY });
-            persistPosition(currentLocationId.current, tileX, tileY);
+        // Normal pathfind & walk
+        const blocked = getNpcBlockedTiles();
+        const path = findPath(locationMap, myPosRef.current.tileX, myPosRef.current.tileY, tileX, tileY, blocked);
+        if (path.length > 0) {
+            walkPath(path);
         }
-    }, [locationMap, myPos, pendingExit, npcs]);
+    }, [locationMap, pendingExit, npcs]);
 
-    // ── Mouse hover detection ──────────────────────────────────────────
+    // ── Mouse move: show path preview ──────────────────────────────────
     const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
         if (!locationMap || !canvasRef.current) return;
         const canvas = canvasRef.current;
@@ -261,8 +340,8 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
 
-        const camX = myPos.tileX * TILE_SIZE - canvas.width / 2 + TILE_SIZE / 2;
-        const camY = myPos.tileY * TILE_SIZE - canvas.height / 2 + TILE_SIZE / 2;
+        const camX = myPosRef.current.tileX * TILE_SIZE - canvas.width / 2 + TILE_SIZE / 2;
+        const camY = myPosRef.current.tileY * TILE_SIZE - canvas.height / 2 + TILE_SIZE / 2;
 
         const tileX = Math.floor((mouseX + camX) / TILE_SIZE);
         const tileY = Math.floor((mouseY + camY) / TILE_SIZE);
@@ -277,42 +356,70 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
                 screenX: mouseX,
                 screenY: mouseY,
             });
-            return;
+        } else {
+            // Check player hover
+            const hPlayer = Object.values(players).find(p => p.tileX === tileX && p.tileY === tileY);
+            if (hPlayer) {
+                setHoveredEntity({
+                    type: 'player',
+                    name: hPlayer.id === myId.current ? 'You' : 'Player',
+                    screenX: mouseX,
+                    screenY: mouseY,
+                });
+            } else if (tileX === myPosRef.current.tileX && tileY === myPosRef.current.tileY) {
+                setHoveredEntity({
+                    type: 'player',
+                    name: 'You',
+                    screenX: mouseX,
+                    screenY: mouseY,
+                });
+            } else {
+                setHoveredEntity(null);
+            }
         }
 
-        // Check player hover (including self)
-        const hPlayer = Object.values(players).find(p => p.tileX === tileX && p.tileY === tileY);
-        if (hPlayer) {
-            setHoveredEntity({
-                type: 'player',
-                name: hPlayer.id === myId.current ? 'You' : `Player`,
-                screenX: mouseX,
-                screenY: mouseY,
-            });
-            return;
-        }
+        // Path preview (only when NOT walking)
+        if (!walkingRef.current && !pendingExit) {
+            const blocked = getNpcBlockedTiles();
+            let targetX = tileX;
+            let targetY = tileY;
 
-        // Check self
-        if (tileX === myPos.tileX && tileY === myPos.tileY) {
-            setHoveredEntity({
-                type: 'player',
-                name: 'You',
-                screenX: mouseX,
-                screenY: mouseY,
-            });
-            return;
-        }
+            // If hovering NPC, find path to nearest adjacent tile
+            if (npc) {
+                const adjacentTiles = [
+                    { x: tileX - 1, y: tileY }, { x: tileX + 1, y: tileY },
+                    { x: tileX, y: tileY - 1 }, { x: tileX, y: tileY + 1 },
+                ];
+                let bestPath: PathNode[] = [];
+                for (const adj of adjacentTiles) {
+                    if (!isTileWalkable(locationMap, adj.x, adj.y)) continue;
+                    if (blocked.has(`${adj.x},${adj.y}`)) continue;
+                    const p = findPath(locationMap, myPosRef.current.tileX, myPosRef.current.tileY, adj.x, adj.y, blocked);
+                    if (p.length > 0 && (bestPath.length === 0 || p.length < bestPath.length)) {
+                        bestPath = p;
+                    }
+                }
+                setPreviewPath(bestPath);
+                return;
+            }
 
+            const path = findPath(locationMap, myPosRef.current.tileX, myPosRef.current.tileY, targetX, targetY, blocked);
+            setPreviewPath(path);
+        }
+    }, [locationMap, players, npcs, pendingExit]);
+
+    const handleMouseLeave = useCallback(() => {
         setHoveredEntity(null);
-    }, [locationMap, myPos, players, npcs]);
-
-    const handleMouseLeave = useCallback(() => setHoveredEntity(null), []);
+        setPreviewPath([]);
+    }, []);
 
     // ── Transition handlers ────────────────────────────────────────────
     function handleTransitionConfirm() {
         if (!pendingExit) return;
         const exit = pendingExit;
         setPendingExit(null);
+        walkingRef.current = false;
+        setIsWalking(false);
         loadLocationById(exit.target_location_id, exit.spawn_label);
     }
 
@@ -343,7 +450,6 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
         const py = npc.tile_y * TILE_SIZE - camY + TILE_SIZE / 2;
         const r = TILE_SIZE * 0.35;
 
-        // Diamond shape for NPCs
         ctx.save();
         ctx.translate(px, py);
         ctx.rotate(Math.PI / 4);
@@ -356,7 +462,6 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
         ctx.stroke();
         ctx.restore();
 
-        // Name label
         ctx.fillStyle = 'rgba(10, 8, 6, 0.7)';
         ctx.font = 'bold 9px serif';
         const nameWidth = ctx.measureText(npc.name).width;
@@ -364,6 +469,66 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
         ctx.fillStyle = '#d4a854';
         ctx.textAlign = 'center';
         ctx.fillText(npc.name, px, py - TILE_SIZE * 0.7);
+        ctx.textAlign = 'start';
+    }
+
+    // ── Render path preview ────────────────────────────────────────────
+    function renderPathPreview(ctx: CanvasRenderingContext2D, path: PathNode[], camX: number, camY: number) {
+        if (path.length === 0) return;
+
+        const pulse = 0.5 + 0.3 * Math.sin(Date.now() / 300);
+
+        // Draw path dots
+        path.forEach((node, i) => {
+            const px = node.x * TILE_SIZE - camX + TILE_SIZE / 2;
+            const py = node.y * TILE_SIZE - camY + TILE_SIZE / 2;
+            const isLast = i === path.length - 1;
+
+            // Connecting line to next node
+            if (i < path.length - 1) {
+                const nextPx = path[i + 1].x * TILE_SIZE - camX + TILE_SIZE / 2;
+                const nextPy = path[i + 1].y * TILE_SIZE - camY + TILE_SIZE / 2;
+                ctx.beginPath();
+                ctx.moveTo(px, py);
+                ctx.lineTo(nextPx, nextPy);
+                ctx.strokeStyle = `rgba(217, 163, 60, ${0.25 * pulse})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            // Dot
+            ctx.beginPath();
+            const dotRadius = isLast ? 5 : 3;
+            ctx.arc(px, py, dotRadius, 0, Math.PI * 2);
+            ctx.fillStyle = isLast
+                ? `rgba(217, 163, 60, ${0.7 * pulse})`
+                : `rgba(217, 163, 60, ${0.4 * pulse})`;
+            ctx.fill();
+
+            // Glow on destination
+            if (isLast) {
+                ctx.save();
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = 'rgba(217, 163, 60, 0.6)';
+                ctx.beginPath();
+                ctx.arc(px, py, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        });
+
+        // Step count label at destination
+        const last = path[path.length - 1];
+        const destPx = last.x * TILE_SIZE - camX + TILE_SIZE / 2;
+        const destPy = last.y * TILE_SIZE - camY + TILE_SIZE / 2;
+        ctx.font = 'bold 10px monospace';
+        const label = `${path.length}`;
+        const labelW = ctx.measureText(label).width;
+        ctx.fillStyle = 'rgba(10, 8, 6, 0.8)';
+        ctx.fillRect(destPx - labelW / 2 - 3, destPy - TILE_SIZE * 0.6 - 8, labelW + 6, 14);
+        ctx.fillStyle = '#d9a33c';
+        ctx.textAlign = 'center';
+        ctx.fillText(label, destPx, destPy - TILE_SIZE * 0.6 + 3);
         ctx.textAlign = 'start';
     }
 
@@ -377,13 +542,17 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
         let animationFrameId: number;
 
         const render = () => {
-            canvas.width = canvas.parentElement!.clientWidth;
-            canvas.height = canvas.parentElement!.clientHeight;
+            if (!canvas.parentElement) return;
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
 
             const camX = myPos.tileX * TILE_SIZE - canvas.width / 2 + TILE_SIZE / 2;
             const camY = myPos.tileY * TILE_SIZE - canvas.height / 2 + TILE_SIZE / 2;
 
             renderLocation(ctx, locationMap, camX, camY, TILE_SIZE, canvas.width, canvas.height);
+
+            // Path preview
+            renderPathPreview(ctx, previewPath, camX, camY);
 
             // Exit indicators
             locationMap.exits.forEach(exit => {
@@ -430,7 +599,7 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
 
         render();
         return () => cancelAnimationFrame(animationFrameId);
-    }, [players, myPos, locationMap, npcs]);
+    }, [players, myPos, locationMap, npcs, previewPath]);
 
     if (loading) {
         return (

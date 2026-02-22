@@ -10,10 +10,15 @@ import { upsertPlayerByWallet } from './db/playerQueries';
 import { createCharacter, getCharactersByPlayerId } from './db/characterQueries';
 import { createQuest, finishQuest, getAllQuests, getQuestById, getQuestHistory, seedLocations, getAllLocations, getLocationById, upsertPlayerPosition, getPlayerPosition, getPlayersInLocation } from './db/questQueries';
 import { getNpcsByLocation, getNpcById, seedNpcs } from './db/npcQueries';
+import { seedItems, getAllTemplateItems, getItemsByCategory, getItemById, createItemInstance, addItemToInventory, getCharacterInventory, removeItemFromInventory, equipItem, unequipItem } from './db/itemQueries';
+import { seedAbilities, getAllAbilities, getAbilitiesByType, getAbilitiesForClass, getAbilitiesForAncestry, getAbilityById, learnAbility, getCharacterAbilities, forgetAbility } from './db/abilityQueries';
 import { ALL_SEED_LOCATIONS } from './game/locationSeeds';
 import { ALL_SEED_NPCS } from './game/npcSeeds';
+import { ALL_SEED_ITEMS, CLASS_STARTER_ITEMS } from './game/itemSeeds';
+import { ALL_SEED_ABILITIES } from './game/abilitySeeds';
 import { QuestDirector, QuestActionInput } from './ai/QuestDirector';
 import { generateNpcDialog } from './ai/npcDialog';
+
 
 const questDirector = new QuestDirector();
 
@@ -275,6 +280,185 @@ app.post('/api/npc/seed', async (req, res) => {
     }
 });
 
+// --- ITEM ENDPOINTS ---
+
+app.get('/api/item/list', async (req, res) => {
+    try {
+        const category = req.query.category as string | undefined;
+        const items = category
+            ? await getItemsByCategory(category)
+            : await getAllTemplateItems();
+        res.json({ success: true, items });
+    } catch (error: any) {
+        res.status(500).json({ error: 'Failed to fetch items', details: error.message });
+    }
+});
+
+app.get('/api/item/:id', async (req, res) => {
+    try {
+        const item = await getItemById(req.params.id);
+        if (!item) return res.status(404).json({ error: 'Item not found' });
+        res.json({ success: true, item });
+    } catch (error: any) {
+        res.status(500).json({ error: 'Failed to fetch item', details: error.message });
+    }
+});
+
+app.post('/api/item/seed', async (req, res) => {
+    try {
+        const success = await seedItems(ALL_SEED_ITEMS);
+        if (!success) return res.status(500).json({ error: 'Failed to seed items' });
+        res.json({ success: true, count: ALL_SEED_ITEMS.length });
+    } catch (error: any) {
+        res.status(500).json({ error: 'Item seed failed', details: error.message });
+    }
+});
+
+// Character inventory
+app.get('/api/character/:id/inventory', async (req, res) => {
+    try {
+        const inventory = await getCharacterInventory(req.params.id);
+        res.json({ success: true, inventory });
+    } catch (error: any) {
+        res.status(500).json({ error: 'Failed to fetch inventory', details: error.message });
+    }
+});
+
+app.post('/api/character/:id/inventory/add', async (req, res) => {
+    try {
+        const { templateId, quantity, slotPosition } = req.body;
+        if (!templateId) return res.status(400).json({ error: 'templateId is required' });
+        // Create a player instance from the template
+        const itemId = await createItemInstance(templateId);
+        if (!itemId) return res.status(500).json({ error: 'Failed to create item instance' });
+        const success = await addItemToInventory(req.params.id, itemId, quantity || 1, slotPosition || 'backpack');
+        if (!success) return res.status(500).json({ error: 'Failed to add to inventory' });
+        res.json({ success: true, itemId });
+    } catch (error: any) {
+        res.status(500).json({ error: 'Add item failed', details: error.message });
+    }
+});
+
+app.post('/api/character/:id/inventory/give-starter-kit', async (req, res) => {
+    try {
+        const { heroClass } = req.body;
+        const starterItems = CLASS_STARTER_ITEMS[heroClass];
+        if (!starterItems) return res.status(400).json({ error: `No starter kit for class: ${heroClass}` });
+        const results = [];
+        for (const templateId of starterItems) {
+            const itemId = await createItemInstance(templateId);
+            if (itemId) {
+                await addItemToInventory(req.params.id, itemId);
+                results.push(itemId);
+            }
+        }
+        res.json({ success: true, itemsGiven: results.length });
+    } catch (error: any) {
+        res.status(500).json({ error: 'Starter kit failed', details: error.message });
+    }
+});
+
+app.put('/api/inventory/:entryId/equip', async (req, res) => {
+    try {
+        const { slotPosition } = req.body;
+        const success = await equipItem(req.params.entryId, slotPosition || 'main_hand');
+        if (!success) return res.status(500).json({ error: 'Failed to equip' });
+        res.json({ success: true });
+    } catch (error: any) {
+        res.status(500).json({ error: 'Equip failed', details: error.message });
+    }
+});
+
+app.put('/api/inventory/:entryId/unequip', async (req, res) => {
+    try {
+        const success = await unequipItem(req.params.entryId);
+        if (!success) return res.status(500).json({ error: 'Failed to unequip' });
+        res.json({ success: true });
+    } catch (error: any) {
+        res.status(500).json({ error: 'Unequip failed', details: error.message });
+    }
+});
+
+app.delete('/api/inventory/:entryId', async (req, res) => {
+    try {
+        const success = await removeItemFromInventory(req.params.entryId);
+        if (!success) return res.status(500).json({ error: 'Failed to remove item' });
+        res.json({ success: true });
+    } catch (error: any) {
+        res.status(500).json({ error: 'Remove failed', details: error.message });
+    }
+});
+
+// --- ABILITY ENDPOINTS ---
+
+app.get('/api/ability/list', async (req, res) => {
+    try {
+        const type = req.query.type as string | undefined;
+        const heroClass = req.query.class as string | undefined;
+        const ancestry = req.query.ancestry as string | undefined;
+        let abilities;
+        if (type) abilities = await getAbilitiesByType(type);
+        else if (heroClass) abilities = await getAbilitiesForClass(heroClass);
+        else if (ancestry) abilities = await getAbilitiesForAncestry(ancestry);
+        else abilities = await getAllAbilities();
+        res.json({ success: true, abilities });
+    } catch (error: any) {
+        res.status(500).json({ error: 'Failed to fetch abilities', details: error.message });
+    }
+});
+
+app.get('/api/ability/:id', async (req, res) => {
+    try {
+        const ability = await getAbilityById(req.params.id);
+        if (!ability) return res.status(404).json({ error: 'Ability not found' });
+        res.json({ success: true, ability });
+    } catch (error: any) {
+        res.status(500).json({ error: 'Failed to fetch ability', details: error.message });
+    }
+});
+
+app.post('/api/ability/seed', async (req, res) => {
+    try {
+        const success = await seedAbilities(ALL_SEED_ABILITIES);
+        if (!success) return res.status(500).json({ error: 'Failed to seed abilities' });
+        res.json({ success: true, count: ALL_SEED_ABILITIES.length });
+    } catch (error: any) {
+        res.status(500).json({ error: 'Ability seed failed', details: error.message });
+    }
+});
+
+app.get('/api/character/:id/abilities', async (req, res) => {
+    try {
+        const abilities = await getCharacterAbilities(req.params.id);
+        res.json({ success: true, abilities });
+    } catch (error: any) {
+        res.status(500).json({ error: 'Failed to fetch character abilities', details: error.message });
+    }
+});
+
+app.post('/api/character/:id/abilities/learn', async (req, res) => {
+    try {
+        const { abilityId, source } = req.body;
+        if (!abilityId) return res.status(400).json({ error: 'abilityId is required' });
+        const success = await learnAbility(req.params.id, abilityId, source || 'level_up');
+        if (!success) return res.status(500).json({ error: 'Failed to learn ability' });
+        res.json({ success: true });
+    } catch (error: any) {
+        res.status(500).json({ error: 'Learn ability failed', details: error.message });
+    }
+});
+
+app.delete('/api/character/:id/abilities/:abilityId', async (req, res) => {
+    try {
+        const success = await forgetAbility(req.params.id, req.params.abilityId);
+        if (!success) return res.status(500).json({ error: 'Failed to forget ability' });
+        res.json({ success: true });
+    } catch (error: any) {
+        res.status(500).json({ error: 'Forget ability failed', details: error.message });
+    }
+});
+
+
 
 app.get('/api/quest/list', async (req, res) => {
     try {
@@ -284,6 +468,7 @@ app.get('/api/quest/list', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch quests', details: error.message });
     }
 });
+
 
 app.get('/api/quest/:id', async (req, res) => {
     try {
