@@ -1,11 +1,15 @@
 [workspace]
 resolver = "2"
 members = [
-  "soroban/*"
+  "soroban/dnd_token",
+  "soroban/fate_verifier",
+  "soroban/relic_registry",
+  "soroban/adventure_vault",
 ]
 
 [workspace.dependencies]
 soroban-sdk = "22"
+soroban-token-sdk = "22"
 
 [profile.release]
 opt-level = "z"

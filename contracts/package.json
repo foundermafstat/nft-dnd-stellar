@@ -6,8 +6,14 @@
     "scripts": {
         "build": "cargo build --target wasm32v1-none --release",
         "test": "cargo test",
-        "deploy:local": "stellar contract deploy --wasm target/wasm32v1-none/release/dnd_contract.wasm --source alice --network local",
-        "deploy:testnet": "stellar contract deploy --wasm target/wasm32v1-none/release/dnd_contract.wasm --source default --network testnet",
-        "bindings": "stellar contract bindings typescript --network testnet --contract-id <CONTRACT_ID> --output-dir ../client/src/contracts"
+        "deploy:dnd-token": "stellar contract deploy --wasm target/wasm32v1-none/release/dnd_token.wasm --source default --network testnet",
+        "deploy:fate-verifier": "stellar contract deploy --wasm target/wasm32v1-none/release/fate_verifier.wasm --source default --network testnet",
+        "deploy:relic-registry": "stellar contract deploy --wasm target/wasm32v1-none/release/relic_registry.wasm --source default --network testnet",
+        "deploy:adventure-vault": "stellar contract deploy --wasm target/wasm32v1-none/release/adventure_vault.wasm --source default --network testnet",
+        "deploy:local:dnd-token": "stellar contract deploy --wasm target/wasm32v1-none/release/dnd_token.wasm --source alice --network local",
+        "deploy:local:all": "npm run deploy:local:dnd-token && echo 'Deploy remaining contracts with IDs from previous deploys'",
+        "bindings:dnd-token": "stellar contract bindings typescript --network testnet --contract-id <CONTRACT_ID> --output-dir ../client/src/contracts/dnd-token",
+        "bindings:relic-registry": "stellar contract bindings typescript --network testnet --contract-id <CONTRACT_ID> --output-dir ../client/src/contracts/relic-registry",
+        "bindings:adventure-vault": "stellar contract bindings typescript --network testnet --contract-id <CONTRACT_ID> --output-dir ../client/src/contracts/adventure-vault"
     }
 }

@@ -1,3 +1,7 @@
 node_modules
 .env
 .env.*
+
+# Rust / Soroban build artifacts
+contracts/target/
+contracts/Cargo.lock
