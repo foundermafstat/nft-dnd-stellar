@@ -14,7 +14,8 @@ interface NpcDialogProps {
     onClose: () => void;
 }
 
-const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001';
+import { SERVER_URL } from '@/lib/config';
+
 
 export default function NpcDialog({ npcId, npcName, npcTitle, onClose }: NpcDialogProps) {
     const [messages, setMessages] = useState<DialogMessage[]>([]);
@@ -97,8 +98,8 @@ export default function NpcDialog({ npcId, npcName, npcTitle, onClose }: NpcDial
                     <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div
                             className={`max-w-[85%] px-3 py-2 rounded-lg text-xs font-serif leading-relaxed ${msg.role === 'user'
-                                    ? 'bg-stone-800/50 text-stone-300 border border-stone-700/30'
-                                    : 'bg-amber-900/15 text-amber-200/90 border border-amber-800/20'
+                                ? 'bg-stone-800/50 text-stone-300 border border-stone-700/30'
+                                : 'bg-amber-900/15 text-amber-200/90 border border-amber-800/20'
                                 }`}
                         >
                             {msg.role === 'assistant' && (

@@ -1,4 +1,5 @@
-const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001';
+import { SERVER_URL } from './config';
+
 
 export interface QuestHistoryEntry {
     id: string;

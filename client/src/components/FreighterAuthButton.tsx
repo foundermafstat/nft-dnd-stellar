@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { isAllowed, setAllowed, requestAccess } from '@stellar/freighter-api';
 import { LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { SERVER_URL } from '@/lib/config';
+
 
 interface AuthButtonProps {
     onAuthenticated: (playerId: string) => void;
@@ -25,7 +27,7 @@ export default function FreighterAuthButton({ onAuthenticated, variant = 'defaul
 
             const pubKey = await requestAccess();
 
-            const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001';
+
 
             const response = await fetch(`${SERVER_URL}/api/auth/wallet`, {
                 method: 'POST',

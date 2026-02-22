@@ -9,6 +9,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { UserPlus } from "lucide-react";
+import { SERVER_URL } from "@/lib/config";
+
 
 export default function Home() {
   const { playerId, setPlayerId, isLoading } = useAuth();
@@ -57,7 +59,7 @@ export default function Home() {
   useEffect(() => {
     if (playerId) {
       setIsLoadingChars(true);
-      const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001';
+
       fetch(`${SERVER_URL}/api/character/player/${playerId}`)
         .then(res => res.json())
         .then(data => {

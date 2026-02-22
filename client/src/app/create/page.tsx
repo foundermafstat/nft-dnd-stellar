@@ -6,6 +6,8 @@ import { ChevronLeft, Dices, Save, Sparkles, Minus, Plus } from 'lucide-react';
 import { HeroClass } from '../../../../shared/src/models/player';
 import { Ancestry, ANCESTRIES, calculateModifier } from '../../../../shared/src/models/rules';
 import { useAuth } from '@/context/AuthContext';
+import { SERVER_URL } from '@/lib/config';
+
 
 function StatRow({ label, value, min, max, availablePoints, onChange }: { label: string; value: number, min: number, max: number, availablePoints: number, onChange: (val: number) => void }) {
     const mod = calculateModifier(value);
@@ -143,7 +145,7 @@ export default function CreateHeroPage() {
 
         setIsGenerating(true);
         try {
-            const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001';
+
             const response = await fetch(`${SERVER_URL}/api/character/generate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -199,7 +201,7 @@ export default function CreateHeroPage() {
         const ac = 10 + calculateModifier(stats.dex);
 
         try {
-            const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001';
+
             const response = await fetch(`${SERVER_URL}/api/character/create`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

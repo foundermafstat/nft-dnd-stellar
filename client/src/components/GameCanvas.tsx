@@ -37,7 +37,8 @@ interface GameCanvasProps {
     playerId: string;
 }
 
-const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001';
+import { SERVER_URL } from '@/lib/config';
+
 const TILE_SIZE = 36;
 const DEFAULT_LOCATION_ID = '00000000-0000-4000-a000-000000000001';
 const WALK_STEP_MS = 150; // Milliseconds per tile step
