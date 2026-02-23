@@ -10,6 +10,7 @@
         "deploy:fate-verifier": "stellar contract deploy --wasm target/wasm32-unknown-unknown/release/fate_verifier.wasm --source default --network testnet",
         "deploy:relic-registry": "stellar contract deploy --wasm target/wasm32-unknown-unknown/release/relic_registry.wasm --source default --network testnet",
         "deploy:adventure-vault": "stellar contract deploy --wasm target/wasm32-unknown-unknown/release/adventure_vault.wasm --source default --network testnet",
+        "deploy:dnd-arena-game": "stellar contract deploy --wasm target/wasm32-unknown-unknown/release/dnd_arena_game.wasm --source default --network testnet --network-passphrase \"Test SDF Network ; September 2015\"",
         "deploy:local:dnd-token": "stellar contract deploy --wasm target/wasm32-unknown-unknown/release/dnd_token.wasm --source alice --network local",
         "deploy:local:all": "npm run deploy:local:dnd-token && echo 'Deploy remaining contracts with IDs from previous deploys'",
         "bindings:dnd-token": "stellar contract bindings typescript --network testnet --network-passphrase \"Test SDF Network ; September 2015\" --contract-id CB2RIG4PPLQNW4EBL6WRWU4VSHO4GCH722XT4BLXMJ7NJM34ZI2OC2RU --output-dir ../client/src/contracts/dnd-token",

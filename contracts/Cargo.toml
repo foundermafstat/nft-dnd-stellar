@@ -5,6 +5,7 @@ members = [
   "soroban/fate_verifier",
   "soroban/relic_registry",
   "soroban/adventure_vault",
+  "soroban/dnd_arena_game",
 ]
 
 [workspace.dependencies]

@@ -7,7 +7,8 @@ import {
     Networks,
     Memo,
     rpc,
-    Keypair
+    Keypair,
+    nativeToScVal
 } from '@stellar/stellar-sdk';
 import { SERVER_URL } from './config';
 
@@ -23,7 +24,9 @@ export async function startGame(playerAddress: string): Promise<{ success: boole
         const contract = new Contract(GAME_HUB_CONTRACT);
         const sessionId = Math.floor(Math.random() * 1000000);
 
+        console.log("[startGame] Initializing Game Hub Contract:", GAME_HUB_CONTRACT);
         const dummyPlayer2 = Keypair.random().publicKey();
+        console.log("[startGame] Session ID:", sessionId, "Player 1:", playerAddress, "Player 2 (dummy):", dummyPlayer2);
 
         const tx = new TransactionBuilder(sourceAccount, {
             fee: "1000",
@@ -35,27 +38,36 @@ export async function startGame(playerAddress: string): Promise<{ success: boole
                 xdr.ScVal.scvU32(sessionId), // session_id
                 new Address(playerAddress).toScVal(), // player1
                 new Address(dummyPlayer2).toScVal(), // player2 (solo test)
-                xdr.ScVal.scvI128(new xdr.Int128Parts({ hi: xdr.Int64.fromString("0"), lo: xdr.Uint64.fromString("0") })),
-                xdr.ScVal.scvI128(new xdr.Int128Parts({ hi: xdr.Int64.fromString("0"), lo: xdr.Uint64.fromString("0") })),
+                nativeToScVal(0, { type: 'i128' }), // player1_points mock (i128)
+                nativeToScVal(0, { type: 'i128' }), // player2_points mock (i128)
             ))
             .addMemo(Memo.text('NFT-DND: Start Quest'))
             .setTimeout(30)
             .build();
 
+        console.log("[startGame] Preparing transaction (Simulation)...");
         const preparedTx = await rpcServer.prepareTransaction(tx);
+        console.log("[startGame] Prepared Tx XDR:", preparedTx.toXDR());
+
+        console.log("[startGame] Sending to Freighter for signature...");
         const signResult: any = await signTransaction(preparedTx.toXDR(), { networkPassphrase: Networks.TESTNET });
+        console.log("[startGame] Freighter Sign Result:", signResult);
 
         if (signResult.error) throw new Error(signResult.error);
         const signedXdr = typeof signResult === 'string' ? signResult : signResult.signedTxXdr;
 
         const signedTx = TransactionBuilder.fromXDR(signedXdr, Networks.TESTNET);
+
+        console.log("[startGame] Submitting transaction to Soroban RPC...");
         const sendResponse = await rpcServer.sendTransaction(signedTx);
+        console.log("[startGame] Send Response:", JSON.stringify(sendResponse, null, 2));
 
         if (sendResponse.status === 'ERROR') {
-            throw new Error(sendResponse.errorResult?.toXDR('base64') || 'Transaction failed');
+            console.error("[startGame] Detailed Send Error:", sendResponse);
+            throw new Error(sendResponse.errorResult?.toXDR('base64') || JSON.stringify(sendResponse));
         }
 
-        // Wait for confirmation
+        console.log("[startGame] Waiting for network confirmation, Hash:", sendResponse.hash);
         let txResponse = await rpcServer.getTransaction(sendResponse.hash);
         let retries = 0;
         while (txResponse.status === 'NOT_FOUND' && retries < 10) {
