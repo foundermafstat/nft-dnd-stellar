@@ -25,7 +25,7 @@ Adventure Vault: CCIIZ2MFPGV3SIRM3K2ZJFVPG6LMDCROTYUDTKI2GB6OHWZLRSSTGQ6J
   - [NPC System](#6-npc-system--ai-dialog)
   - [Quest Director](#7-quest-director--ai-dungeon-master)
   - [Realtime Multiplayer](#8-realtime-multiplayer)
-  - [Blockchain & IPFS](#9-stellar-blockchain--ipfs)
+  - [Blockchain, ZK Proofs & IPFS](#9-stellar-blockchain-zk-proofs--ipfs)
   - [Game Server Engine](#10-game-server-engine)
 - [API Reference](#api-reference)
 - [Database Tables](#database-tables)
@@ -91,7 +91,8 @@ Adventure Vault: CCIIZ2MFPGV3SIRM3K2ZJFVPG6LMDCROTYUDTKI2GB6OHWZLRSSTGQ6J
 | **Backend** | Node.js, Express, TypeScript, ts-node-dev |
 | **AI** | OpenAI GPT-4o (quest narratives, NPC dialog, loot generation, character creation) |
 | **Database** | Supabase (PostgreSQL + Realtime broadcast channels) |
-| **Blockchain** | Stellar Soroban smart contracts (Rust, soroban-sdk 22) |
+| **Blockchain** | Stellar Soroban smart contracts (Rust, soroban-sdk 22), Protocol 25 (X-Ray) |
+| **ZK Stack** | Noir, RISC Zero zkVM, BN254 Elliptic Curves, Poseidon/Poseidon2 Hashes |
 | **Storage** | IPFS via Filebase (S3-compatible, auto-pinning) |
 | **Auth** | Freighter wallet (Stellar browser extension) |
 | **Shared** | TypeScript shared models package (player, world, item, location, rules) |
@@ -530,7 +531,13 @@ Events: position_update, player_join, player_leave
 
 ---
 
-### 9. Stellar Blockchain & IPFS
+### 9. Stellar Blockchain, ZK Proofs & IPFS
+
+**Zero-Knowledge (ZK) & Protocol 25 (X-Ray):**
+
+Our system is engineered with **"honesty by design"** leveraging Stellar's latest **Protocol 25 (X-Ray)** upgrades. This introduces critical cryptographic building blocks natively at the protocol level—specifically, operations on **BN254 elliptic curves** and **Poseidon/Poseidon2 hash functions**. These are the fundamental primitives upon which modern ZK systems rely.
+
+By utilizing these native operations, our Soroban smart contracts can efficiently verify Zero-Knowledge proofs directly on the blockchain. We use advanced ZK toolsets like **Noir** and zkVM approaches like **RISC Zero** to compute game logic off-chain (e.g., fog of war, hidden loot rolls, secret character stats). The resulting cryptographic proofs are submitted to stellar, verifying that the AI Dungeon Master and players acted faithfully according to the rules, without exposing the hidden data itself.
 
 **IPFS Upload (services/ipfs.ts):**
 
