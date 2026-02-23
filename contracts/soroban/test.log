@@ -1,0 +1,51 @@
+warning: unused import: `String`
+ --> soroban\adventure_vault\src\session.rs:3:46
+  |
+3 | ..., Env, Map, String, Vec};
+  |                ^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `Vec`
+ --> soroban\adventure_vault\src\test.rs:3:79
+  |
+3 | ...Env, String, Vec};
+  |                 ^^^
+
+warning: `adventure-vault` (lib test) generated 2 warnings (run `cargo fix --lib -p adventure-vault --tests` to apply 2 suggestions)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.66s
+     Running unittests src\lib.rs (C:\Projects\nft-dnd-stellar\contracts\target\debug\deps\adventure_vault-2cea553d2dc2d5d3.exe)
+
+running 8 tests
+test test::test_end_adventure_failure ... ok
+test test::test_cannot_end_twice - should panic ... ok
+test test::test_submit_action ... ok
+test test::test_submit_action_wrong_player - should panic ... ok
+test test::test_session_count ... ok
+test test::test_loot_rolling_flow ... FAILED
+test test::test_end_adventure_success ... ok
+test test::test_init_adventure ... ok
+
+failures:
+
+---- test::test_loot_rolling_flow stdout ----
+
+thread 'test::test_loot_rolling_flow' (15504) panicked at C:\Users\TEKNES\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-env-host-22.1.3\src\host.rs:847:9:
+HostError: Error(WasmVm, InvalidAction)
+
+Event log (newest first):
+   0: [Diagnostic Event] topics:[error, Error(WasmVm, InvalidAction)], data:"escalating error to panic"
+   1: [Diagnostic Event] topics:[error, Error(WasmVm, InvalidAction)], data:["contract call failed", resolve_loot_roll, [1]]
+   2: [Failed Diagnostic Event (not emitted)] contract:CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOLZM, topics:[error, Error(WasmVm, InvalidAction)], data:"caught error from function"
+   3: [Failed Diagnostic Event (not emitted)] contract:CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOLZM, topics:[log], data:["caught panic 'session is not active' from contract function 'Symbol(obj#607)'", 1]
+   4: [Diagnostic Event] topics:[fn_call, CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOLZM, resolve_loot_roll], data:1
+
+Writing test snapshot file for test "test::test_loot_rolling_flow" to "test_snapshots\\test\\test_loot_rolling_flow.1.json".
+
+
+failures:
+    test::test_loot_rolling_flow
+
+test result: FAILED. 7 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s
+
+error: test failed, to rerun pass `-p adventure-vault --lib`

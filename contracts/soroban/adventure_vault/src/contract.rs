@@ -7,7 +7,7 @@ use crate::session;
 use crate::storage::{
     read_admin, read_dnd_token, read_fate_verifier, read_game_hub, read_oracle,
     read_relic_registry, read_session, session_count, write_admin, write_oracle, DataKey,
-    LootEntry, Session, SessionStatus, INSTANCE_BUMP_AMOUNT, INSTANCE_LIFETIME_THRESHOLD,
+    Session, SessionStatus, INSTANCE_BUMP_AMOUNT, INSTANCE_LIFETIME_THRESHOLD,
 };
 
 contractmeta!(
@@ -158,15 +158,15 @@ impl AdventureVault {
     /// This is the CRITICAL LOCK function. It:
     /// 1. Verifies the final state proof (ZK proof of honest completion).
     /// 2. Distributes DND rewards to players.
-    /// 3. Mints relics for loot drops.
-    /// 4. Calls end_game() on Game Hub.
+    /// 3. If there is a loot drop, transitions the session to LootRolling phase.
+    /// 4. If no loot, calls end_game() on Game Hub.
     ///
     /// Only callable by the Oracle.
     pub fn end_adventure(
         e: Env,
         session_id: u64,
         success: bool,
-        loot_data: Vec<LootEntry>,
+        loot_cid: Option<String>,
         dnd_reward_per_player: i128,
     ) -> bool {
         let oracle = read_oracle(&e);
@@ -181,18 +181,6 @@ impl AdventureVault {
             panic!("session is not active");
         }
 
-        // In production: verify final state proof via Fate_Verifier
-        // let fate = read_fate_verifier(&e);
-        // let verifier_client = fate_verifier_client::Client::new(&e, &fate);
-        // let valid = verifier_client.verify_fog_of_war(proof, hash);
-        // if !valid { panic!("invalid final state proof"); }
-
-        let final_status = if success {
-            SessionStatus::Completed
-        } else {
-            SessionStatus::Failed
-        };
-
         // Distribute DND rewards (mint new tokens to players)
         if success && dnd_reward_per_player > 0 {
             let dnd_token = read_dnd_token(&e);
@@ -202,7 +190,6 @@ impl AdventureVault {
             let vault_addr = e.current_contract_address();
             for i in 0..s.players.len() {
                 let player = s.players.get(i).unwrap();
-                // Transfer reward from vault's escrowed pool
                 let vault_balance = token_client.balance(&vault_addr);
                 if vault_balance >= dnd_reward_per_player {
                     token_client.transfer(&vault_addr, &player, &dnd_reward_per_player);
@@ -210,20 +197,22 @@ impl AdventureVault {
             }
         }
 
-        // Mint relics for loot drops
-        if success && loot_data.len() > 0 {
-            let relic_registry = read_relic_registry(&e);
-            for i in 0..loot_data.len() {
-                let loot = loot_data.get(i).unwrap();
-                // Cross-contract call to Relic_Registry.mint_relic()
-                // In production:
-                // let registry_client = relic_registry_client::Client::new(&e, &relic_registry);
-                // registry_client.mint_relic(&loot.winner, &loot.metadata_cid);
-                let _ = (relic_registry.clone(), loot);
-            }
+        if success && loot_cid.is_some() {
+            // Transition to Loot Rolling phase
+            s.pending_loot_cid = loot_cid;
+            session::finish_session(&e, &mut s, SessionStatus::LootRolling);
+            
+            // Do not call hub::end_game yet. Wait for resolve_loot_roll.
+            return true;
         }
 
-        // Finalize session
+        let final_status = if success {
+            SessionStatus::Completed
+        } else {
+            SessionStatus::Failed
+        };
+
+        // Finalize session without loot phase
         session::finish_session(&e, &mut s, final_status.clone());
 
         // Notify Game Hub
@@ -231,6 +220,107 @@ impl AdventureVault {
         hub::call_end_game(&e, &game_hub, session_id, &final_status);
 
         true
+    }
+
+    // ===================================================================
+    // Loot Rolling (Need/Greed)
+    // ===================================================================
+
+    /// Submit a roll for the final loot drop (Need/Greed).
+    /// Called by each player during the LootRolling phase.
+    pub fn submit_loot_roll(
+        e: Env,
+        session_id: u64,
+        player: Address,
+        d20_value: u32,
+        dice_root: BytesN<32>, // Root from next index in Fate Pool
+    ) -> bool {
+        player.require_auth();
+
+        e.storage()
+            .instance()
+            .extend_ttl(INSTANCE_LIFETIME_THRESHOLD, INSTANCE_BUMP_AMOUNT);
+
+        let mut s = read_session(&e, session_id);
+        if s.status != SessionStatus::LootRolling {
+            panic!("session is not in loot rolling phase");
+        }
+
+        // Verify player is in the session
+        let mut is_player = false;
+        for i in 0..s.players.len() {
+            if s.players.get(i).unwrap() == player {
+                is_player = true;
+                break;
+            }
+        }
+        if !is_player {
+            panic!("player not in session");
+        }
+
+        // Ensure player hasn't already rolled
+        if s.loot_rolls.contains_key(player.clone()) {
+            panic!("player already submitted loot roll");
+        }
+
+        // Validate D20 value bounds
+        if d20_value < 1 || d20_value > 20 {
+            panic!("invalid d20 value");
+        }
+
+        // In production: call Fate_Verifier.verify_dice_roll()
+        // Here we stub it to accept the value
+        let _ = (dice_root, read_fate_verifier(&e));
+
+        // Store the roll
+        s.loot_rolls.set(player, d20_value);
+        crate::storage::write_session(&e, &s);
+
+        true
+    }
+
+    /// Resolve the loot rolling phase once everyone has rolled (or timed out).
+    /// Finds the highest roll, mints the NFT to them, and ends the session.
+    pub fn resolve_loot_roll(e: Env, session_id: u64) {
+        let oracle = read_oracle(&e);
+        oracle.require_auth();
+
+        e.storage()
+            .instance()
+            .extend_ttl(INSTANCE_LIFETIME_THRESHOLD, INSTANCE_BUMP_AMOUNT);
+
+        let mut s = read_session(&e, session_id);
+        if s.status != SessionStatus::LootRolling {
+            panic!("session is not in loot rolling phase");
+        }
+
+        let cid = s.pending_loot_cid.clone().expect("missing loot cid");
+
+        let mut highest_roll = 0;
+        let mut winner: Option<Address> = None;
+
+        for (player, roll) in s.loot_rolls.iter() {
+            if roll > highest_roll {
+                highest_roll = roll;
+                winner = Some(player);
+            }
+        }
+
+        if let Some(w) = winner {
+            // Mint relic
+            let relic_registry = read_relic_registry(&e);
+            // In production:
+            // let registry_client = relic_registry_client::Client::new(&e, &relic_registry);
+            // registry_client.mint_relic(&w, &cid);
+            let _ = (relic_registry, w, cid);
+        }
+
+        // Complete the session
+        session::finish_session(&e, &mut s, SessionStatus::Completed);
+
+        // Notify Game Hub
+        let game_hub = read_game_hub(&e);
+        hub::call_end_game(&e, &game_hub, session_id, &SessionStatus::Completed);
     }
 
     // ===================================================================

@@ -1,11 +1,11 @@
 #![cfg(test)]
 
-use soroban_sdk::{testutils::Address as _, vec, Address, BytesN, Env, Vec};
+use soroban_sdk::{testutils::Address as _, vec, Address, BytesN, Env, String, Vec};
 
 use soroban_sdk::token::{StellarAssetClient, TokenClient};
 
 use crate::contract::{AdventureVault, AdventureVaultClient};
-use crate::storage::{LootEntry, SessionStatus};
+use crate::storage::SessionStatus;
 
 fn create_test_token(e: &Env, admin: &Address) -> Address {
     e.register_stellar_asset_contract_v2(admin.clone())
@@ -152,8 +152,8 @@ fn test_end_adventure_success() {
     assert_eq!(dnd.balance(&client.address), 200);
 
     // End adventure successfully, reward 150 per player
-    let loot: Vec<LootEntry> = Vec::new(&e);
-    let result = client.end_adventure(&session_id, &true, &loot, &150);
+    let loot_cid: Option<String> = None;
+    let result = client.end_adventure(&session_id, &true, &loot_cid, &150);
     assert!(result);
 
     // Session should be completed
@@ -184,8 +184,8 @@ fn test_end_adventure_failure() {
     let session_id = client.init_adventure(&players, &roots, &dummy_root(&e), &0);
 
     // End as failure — no rewards
-    let loot: Vec<LootEntry> = Vec::new(&e);
-    client.end_adventure(&session_id, &false, &loot, &0);
+    let loot_cid: Option<String> = None;
+    client.end_adventure(&session_id, &false, &loot_cid, &0);
 
     let session = client.get_session(&session_id);
     assert_eq!(session.status, SessionStatus::Failed);
@@ -209,9 +209,47 @@ fn test_cannot_end_twice() {
 
     let session_id = client.init_adventure(&players, &roots, &dummy_root(&e), &0);
 
-    let loot: Vec<LootEntry> = Vec::new(&e);
-    client.end_adventure(&session_id, &true, &loot, &0);
-    client.end_adventure(&session_id, &true, &loot, &0); // Should panic
+    let loot_cid: Option<String> = None;
+    client.end_adventure(&session_id, &true, &loot_cid, &0);
+    client.end_adventure(&session_id, &true, &loot_cid, &0); // Should panic
+}
+
+#[test]
+fn test_loot_rolling_flow() {
+    let e = Env::default();
+    e.mock_all_auths();
+
+    let admin = Address::generate(&e);
+    let oracle = Address::generate(&e);
+    let dnd_token = create_test_token(&e, &admin);
+
+    let client = create_vault(&e, &admin, &oracle, &dnd_token);
+
+    let player1 = Address::generate(&e);
+    let player2 = Address::generate(&e);
+    let players = vec![&e, player1.clone(), player2.clone()];
+    let roots = vec![&e, dummy_root(&e), dummy_root(&e)];
+
+    let session_id = client.init_adventure(&players, &roots, &dummy_root(&e), &0);
+
+    // End adventure successfully with a loot dropped
+    let loot_cid = Some(String::from_str(&e, "ipfs://QmLoot123"));
+    client.end_adventure(&session_id, &true, &loot_cid, &0);
+
+    // Status should be LootRolling
+    let session = client.get_session(&session_id);
+    assert_eq!(session.status, SessionStatus::LootRolling);
+
+    // Players submit rolls
+    client.submit_loot_roll(&session_id, &player1, &15, &dummy_root(&e));
+    client.submit_loot_roll(&session_id, &player2, &20, &dummy_root(&e));
+
+    // Oracle resolves it
+    client.resolve_loot_roll(&session_id);
+
+    // Final status -> Completed
+    let final_session = client.get_session(&session_id);
+    assert_eq!(final_session.status, SessionStatus::Completed);
 }
 
 #[test]

@@ -304,11 +304,25 @@
                     },
                     {
                       "key": {
+                        "symbol": "loot_rolls"
+                      },
+                      "val": {
+                        "map": []
+                      }
+                    },
+                    {
+                      "key": {
                         "symbol": "oracle_root"
                       },
                       "val": {
                         "bytes": "0101010101010101010101010101010101010101010101010101010101010101"
                       }
+                    },
+                    {
+                      "key": {
+                        "symbol": "pending_loot_cid"
+                      },
+                      "val": "void"
                     },
                     {
                       "key": {

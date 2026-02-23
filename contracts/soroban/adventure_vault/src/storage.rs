@@ -1,4 +1,4 @@
-use soroban_sdk::{contracttype, Address, BytesN, Env, String, Vec};
+use soroban_sdk::{contracttype, Address, BytesN, Env, Map, String, Vec};
 
 pub(crate) const DAY_IN_LEDGERS: u32 = 17280;
 pub(crate) const INSTANCE_BUMP_AMOUNT: u32 = 7 * DAY_IN_LEDGERS;
@@ -24,6 +24,7 @@ pub enum DataKey {
 #[contracttype]
 pub enum SessionStatus {
     Active,
+    LootRolling,
     Completed,
     Failed,
 }
@@ -40,6 +41,8 @@ pub struct Session {
     pub action_count: u32,
     pub created_at: u64,
     pub fee_per_player: i128,
+    pub pending_loot_cid: Option<String>,
+    pub loot_rolls: Map<Address, u32>,
 }
 
 /// Loot entry for end_adventure.
