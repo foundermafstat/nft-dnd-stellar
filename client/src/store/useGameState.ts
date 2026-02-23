@@ -9,6 +9,8 @@ export interface ChatMessage {
     content: string;
     itemId?: string; // If this message spawned an item
     timestamp: number;
+    flavorText?: string;
+    flavorPosition?: 'top' | 'bottom';
 }
 
 export interface InventoryItem {
@@ -40,7 +42,7 @@ interface GameState {
 
     // Chat Log
     chatMessages: ChatMessage[];
-    addMessage: (msg: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
+    addMessage: (msg: Omit<ChatMessage, 'id' | 'timestamp' | 'flavorText' | 'flavorPosition'> & { flavorText?: string; flavorPosition?: 'top' | 'bottom' }) => void;
     removeMessage: (id: string) => void;
 
     // Inventory
@@ -75,12 +77,35 @@ export const useGameState = create<GameState>((set) => ({
         }
     ],
     addMessage: (msg) =>
-        set((state) => ({
-            chatMessages: [
-                ...state.chatMessages,
-                { ...msg, id: crypto.randomUUID(), timestamp: Date.now() },
-            ],
-        })),
+        set((state) => {
+            let flavorText = msg.flavorText;
+            let flavorPosition = msg.flavorPosition;
+
+            // Generate random flavor text for DM, enemy, and system messages
+            if ((msg.senderType === 'dm' || msg.senderType === 'enemy' || msg.senderType === 'system') && !flavorText) {
+                const FLAVORS = [
+                    "A cold draft sweeps through the space.",
+                    "The scent of ancient dust lingers in the air.",
+                    "Shadows dance dynamically along the uneven walls.",
+                    "A distant echo momentarily breaks the silence.",
+                    "The ambient light shifts subtly as you act.",
+                    "Motes of dust float lazily in the dim light.",
+                    "The air here tastes metallic and stale.",
+                    "Something skitters lightly in the dark beyond your vision.",
+                    "A faint hum vibrates through the floorboards.",
+                    "The quiet feels almost heavy and expectant."
+                ];
+                flavorText = FLAVORS[Math.floor(Math.random() * FLAVORS.length)];
+                flavorPosition = Math.random() > 0.5 ? 'top' : 'bottom';
+            }
+
+            return {
+                chatMessages: [
+                    ...state.chatMessages,
+                    { ...msg, id: crypto.randomUUID(), timestamp: Date.now(), flavorText, flavorPosition },
+                ],
+            };
+        }),
     removeMessage: (id) =>
         set((state) => ({
             chatMessages: state.chatMessages.filter((m) => m.id !== id),

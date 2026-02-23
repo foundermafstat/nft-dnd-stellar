@@ -266,9 +266,9 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
             if (i === path.length - 1) {
                 const exit = findExitAtTile(step.x, step.y);
                 if (exit) {
-                    // trigger automatic transition
+                    // Prompt for transition
                     walkingRef.current = false;
-                    loadLocationById(exit.target_location_id, exit.spawn_label);
+                    setPendingExit(exit);
                     break;
                 }
             }
@@ -441,10 +441,17 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
         setPreviewPath([]);
     }, []);
 
-    // ── Pre-existing transition handlers (deprecated) ───────────────────────
-    // Modals have been removed in favor of automatic transitions.
-    // function handleTransitionConfirm() ... 
-    // function handleTransitionCancel() ...
+    // ── Transition handlers ───────────────────────
+    function handleTransitionConfirm() {
+        if (!pendingExit) return;
+        const exit = pendingExit;
+        setPendingExit(null);
+        loadLocationById(exit.target_location_id, exit.spawn_label);
+    }
+
+    function handleTransitionCancel() {
+        setPendingExit(null);
+    }
 
     // ── Fallback location ──────────────────────────────────────────────
     function loadFallbackLocation() {
@@ -654,7 +661,31 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
                 />
             )}
 
-            {/* Transition and NPC Modals have been removed and synchronized with the InteractionPanel */}
+            {/* Transition UI */}
+            {pendingExit && (
+                <div className="absolute inset-0 bg-[#050505]/80 backdrop-blur-sm flex items-center justify-center z-[100] animate-in fade-in duration-300">
+                    <div className="bg-[#0a0a0a] border border-amber-900/50 p-8 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] max-w-sm text-center transform scale-100 transition-all">
+                        <h3 className="text-2xl font-cinzel font-bold text-amber-500 mb-2 tracking-widest uppercase">New Location</h3>
+                        <p className="text-stone-400 font-inter text-sm mb-6 leading-relaxed">
+                            Do you want to travel to <span className="text-amber-200 font-medium">this destination</span>?
+                        </p>
+                        <div className="flex gap-4 justify-center mt-4">
+                            <button
+                                onClick={handleTransitionCancel}
+                                className="px-6 py-2.5 rounded-xl border border-stone-800 text-stone-400 font-cinzel font-bold text-xs tracking-widest hover:bg-[#111] hover:text-stone-200 transition-colors uppercase"
+                            >
+                                Stay
+                            </button>
+                            <button
+                                onClick={handleTransitionConfirm}
+                                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-600 hover:to-amber-500 text-amber-50 font-cinzel font-bold text-xs tracking-widest border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all uppercase"
+                            >
+                                Travel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Combat Overlay */}
             {combatState && combatState.status !== 'VICTORY' && combatState.status !== 'DEFEAT' && (

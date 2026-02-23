@@ -34,9 +34,9 @@ export default function DndInterface({ playerId }: DndInterfaceProps) {
             setDiceResult(result);
 
             addMessage({
-                sender: 'System',
-                senderType: 'system',
-                content: `Rolled ${type}: **${result}**`,
+                sender: 'Player',
+                senderType: 'player',
+                content: `Rolled ${type}: ${result}`,
             });
 
             setTimeout(() => setIsRolling(false), 3000);

@@ -189,14 +189,14 @@ export default function WelcomeScreen({ onAuth }: WelcomeScreenProps) {
                         loop
                         muted
                         playsInline
-                        className="absolute inset-0 w-full h-full object-cover mix-blend-screen opacity-[0.25] scale-[1.02] filter contrast-125 saturate-50"
+                        className="absolute inset-0 w-full h-full object-cover opacity-[0.65] scale-[1.02] filter contrast-125 saturate-50"
                     >
                         <source src="/videos/promo.mp4" type="video/mp4" />
                     </video>
                     {/* The crucial gradient overlay from the bottom */}
-                    <div className="absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/80 to-transparent z-10 pointer-events-none"></div>
+                    <div className="absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/40 to-transparent z-10 pointer-events-none"></div>
                     {/* Subtle vignette for cinematic framing */}
-                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_40%,_#050505_100%)] z-10 pointer-events-none opacity-80"></div>
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_20%,_#050505_60%)] z-10 pointer-events-none opacity-30"></div>
                 </div>
 
                 <div className="relative z-20 w-full max-w-6xl mx-auto px-6 flex flex-col items-center text-center mt-20">
@@ -214,13 +214,14 @@ export default function WelcomeScreen({ onAuth }: WelcomeScreenProps) {
                     </FadeIn>
 
                     <FadeIn delay={300} direction="up">
-                        <h1 className="text-5xl md:text-7xl lg:text-[8rem] font-cinzel tracking-widest mb-6 leading-[0.9] text-white drop-shadow-2xl font-bold uppercase">
+                        <h1 className="text-3xl md:text-5xl lg:text-[6rem] font-cinzel tracking-widest mb-6 leading-[0.9] text-white drop-shadow-2xl font-bold uppercase relative z-10">
                             STEP INTO<br />
-                            <span className="relative inline-block text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-700 italic pr-4 mt-2">
-                                THE UNKNOWN
-                                {/* Subtle glow behind the gradient text */}
-                                <span className="absolute inset-0 bg-gradient-to-r from-amber-400 to-amber-700 blur-[80px] opacity-20 -z-10 mix-blend-screen animate-glow-pulse"></span>
-                            </span>
+                            <div className="relative inline-block mt-2 pb-4">
+                                {/* Subtle glow behind the gradient text, sized and positioned to avoid clipping or boxy artifacts */}
+                                <span className="relative text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-700 pr-4">
+                                    THE UNKNOWN
+                                </span>
+                            </div>
                         </h1>
                     </FadeIn>
 

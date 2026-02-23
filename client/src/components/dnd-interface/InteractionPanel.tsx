@@ -18,7 +18,7 @@ export default function InteractionPanel({ triggerRoll }: InteractionPanelProps)
     const [inputText, setInputText] = useState('');
     const [isSendingDialog, setIsSendingDialog] = useState(false);
     const [activeMenu, setActiveMenu] = useState<'inventory' | 'party' | 'playerInfo' | 'skills' | 'dice' | null>(null);
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const scrollRef = useRef<HTMLDivElement>(null);
 
     // Chat is a dropzone for using items from inventory
     const { setNodeRef: setChatDropRef, isOver: isChatOver } = useDroppable({
@@ -27,11 +27,29 @@ export default function InteractionPanel({ triggerRoll }: InteractionPanelProps)
     });
 
     // Auto-scroll chat to bottom
+    const scrollToBottom = () => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+    };
+
     useEffect(() => {
-        // Use a slight delay to allow layout shifts (especially when menus open/close) to complete
-        setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-        }, 50);
+        // Handle immediate DOM mutations and layout changes
+        const viewport = scrollRef.current;
+        if (!viewport) return;
+
+        const { scrollTop, scrollHeight, clientHeight } = viewport;
+        // If user is near bottom, or opened a menu, scroll down. 
+        const isNearBottom = scrollHeight - scrollTop - clientHeight < 150;
+
+        if (isNearBottom || activeMenu !== null) {
+            // Use requestAnimationFrame to let browser paint and calculate new flex sizes
+            requestAnimationFrame(() => {
+                scrollToBottom();
+                setTimeout(scrollToBottom, 50);
+                setTimeout(scrollToBottom, 350); // After duration-300 animation
+            });
+        }
     }, [chatMessages, activeMenu]);
 
     const handleSend = async () => {
@@ -105,16 +123,26 @@ export default function InteractionPanel({ triggerRoll }: InteractionPanelProps)
                     {isChatOver && <span className="text-amber-400 animate-pulse">Drop to Use</span>}
                 </div>
 
-                <ScrollArea className="flex-1 px-5 py-6 bg-[radial-gradient(ellipse_at_top_right,_rgba(245,158,11,0.02)_0%,_transparent_50%)]">
-                    <div className="space-y-6 pb-4">
+                <ScrollArea viewportRef={scrollRef} className="flex-1 min-h-0 bg-[#1c1c1c]">
+                    <div className="space-y-6 pb-4 px-5 pt-6">
                         {chatMessages.map(msg => (
-                            <div key={msg.id} className={`flex flex-col ${msg.senderType === 'player' ? 'items-end' : 'items-start'}`}>
-                                <button
-                                    onClick={() => handleNameClick(msg)}
-                                    className="text-[9px] font-cinzel text-stone-500 tracking-[0.2em] font-bold uppercase mb-1.5 opacity-80 hover:text-amber-400 transition-colors cursor-pointer"
-                                >
-                                    {msg.sender}
-                                </button>
+                            <div key={msg.id} className={`flex flex-col ${msg.senderType === 'player' ? 'items-end' : 'items-start'} mb-2`}>
+
+                                <div className={`flex items-baseline gap-2 mb-1.5 ${msg.senderType === 'player' ? 'flex-row-reverse' : ''}`}>
+                                    <button
+                                        onClick={() => handleNameClick(msg)}
+                                        className="text-[9px] font-cinzel text-stone-500 tracking-[0.2em] font-bold uppercase opacity-80 hover:text-amber-400 transition-colors cursor-pointer"
+                                    >
+                                        {msg.sender}
+                                    </button>
+
+                                    {msg.flavorText && (
+                                        <span className="text-[11px] font-inter text-stone-500 opacity-60 italic tracking-wide max-w-[65%] leading-tight text-left">
+                                            {msg.flavorText}
+                                        </span>
+                                    )}
+                                </div>
+
                                 <div className={`
                                     px-4 py-3 rounded-2xl text-[14px] font-inter max-w-[85%] break-words shadow-sm leading-relaxed
                                     ${msg.senderType === 'player' ? 'bg-[#1a1714] text-amber-50 border border-stone-800 rounded-br-none' :
@@ -122,7 +150,7 @@ export default function InteractionPanel({ triggerRoll }: InteractionPanelProps)
                                             msg.senderType === 'system' ? 'bg-transparent text-stone-400 border border-transparent italic flex gap-2 items-center text-xs' :
                                                 'bg-[#0a0a0a] text-stone-300 border border-stone-800/50 rounded-bl-none'}
                                 `}>
-                                    {msg.content}
+                                    <div>{msg.content}</div>
 
                                     {/* Render Spawned Item in Chat (Draggable) */}
                                     {msg.itemId && (
@@ -133,7 +161,6 @@ export default function InteractionPanel({ triggerRoll }: InteractionPanelProps)
                                 </div>
                             </div>
                         ))}
-                        <div ref={messagesEndRef} className="h-4" />
                     </div>
                 </ScrollArea>
             </div>
