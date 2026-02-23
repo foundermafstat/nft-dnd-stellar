@@ -3,6 +3,12 @@
 > **Procedural, Real-Time, Multiplayer Dark Fantasy RPG** — AI-generated quests, tile-based world, NPC dialog powered by GPT-4o, NFT items on the Stellar blockchain. Built on Shadowdark RPG rules.
 
 ---
+DND Token: CB2RIG4PPLQNW4EBL6WRWU4VSHO4GCH722XT4BLXMJ7NJM34ZI2OC2RU
+Fate Verifier: CCIGFXIXSFUCYWRJVCXFOBAC2KRS4C4AQZRFGSM6A7H3KRXV552CGMCW
+Relic Registry: CAOXCTX57AJJA6D2QN5UXDF3OHDZBDBS2J6SKSHI7TOFTMKGKD5Y5H2X
+Adventure Vault: CCIIZ2MFPGV3SIRM3K2ZJFVPG6LMDCROTYUDTKI2GB6OHWZLRSSTGQ6J
+
+---
 
 ## Table of Contents
 

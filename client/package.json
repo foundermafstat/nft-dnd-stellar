@@ -10,6 +10,9 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^5.2.2",
     "@react-three/cannon": "^6.6.0",
     "@react-three/drei": "^10.7.7",
@@ -36,7 +39,8 @@
     "tailwind-merge": "^3.5.0",
     "three": "^0.183.1",
     "vaul": "^1.1.2",
-    "zod": "^4.3.6"
+    "zod": "^4.3.6",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

@@ -4,16 +4,17 @@
     "private": true,
     "description": "Stellar Soroban Smart Contracts for NFT-DND",
     "scripts": {
-        "build": "cargo build --target wasm32v1-none --release",
+        "build": "cargo build --target wasm32-unknown-unknown --release",
         "test": "cargo test",
-        "deploy:dnd-token": "stellar contract deploy --wasm target/wasm32v1-none/release/dnd_token.wasm --source default --network testnet",
-        "deploy:fate-verifier": "stellar contract deploy --wasm target/wasm32v1-none/release/fate_verifier.wasm --source default --network testnet",
-        "deploy:relic-registry": "stellar contract deploy --wasm target/wasm32v1-none/release/relic_registry.wasm --source default --network testnet",
-        "deploy:adventure-vault": "stellar contract deploy --wasm target/wasm32v1-none/release/adventure_vault.wasm --source default --network testnet",
-        "deploy:local:dnd-token": "stellar contract deploy --wasm target/wasm32v1-none/release/dnd_token.wasm --source alice --network local",
+        "deploy:dnd-token": "stellar contract deploy --wasm target/wasm32-unknown-unknown/release/dnd_token.wasm --source default --network testnet",
+        "deploy:fate-verifier": "stellar contract deploy --wasm target/wasm32-unknown-unknown/release/fate_verifier.wasm --source default --network testnet",
+        "deploy:relic-registry": "stellar contract deploy --wasm target/wasm32-unknown-unknown/release/relic_registry.wasm --source default --network testnet",
+        "deploy:adventure-vault": "stellar contract deploy --wasm target/wasm32-unknown-unknown/release/adventure_vault.wasm --source default --network testnet",
+        "deploy:local:dnd-token": "stellar contract deploy --wasm target/wasm32-unknown-unknown/release/dnd_token.wasm --source alice --network local",
         "deploy:local:all": "npm run deploy:local:dnd-token && echo 'Deploy remaining contracts with IDs from previous deploys'",
-        "bindings:dnd-token": "stellar contract bindings typescript --network testnet --contract-id <CONTRACT_ID> --output-dir ../client/src/contracts/dnd-token",
-        "bindings:relic-registry": "stellar contract bindings typescript --network testnet --contract-id <CONTRACT_ID> --output-dir ../client/src/contracts/relic-registry",
-        "bindings:adventure-vault": "stellar contract bindings typescript --network testnet --contract-id <CONTRACT_ID> --output-dir ../client/src/contracts/adventure-vault"
+        "bindings:dnd-token": "stellar contract bindings typescript --network testnet --network-passphrase \"Test SDF Network ; September 2015\" --contract-id CB2RIG4PPLQNW4EBL6WRWU4VSHO4GCH722XT4BLXMJ7NJM34ZI2OC2RU --output-dir ../client/src/contracts/dnd-token",
+        "bindings:fate-verifier": "stellar contract bindings typescript --network testnet --network-passphrase \"Test SDF Network ; September 2015\" --contract-id CCIGFXIXSFUCYWRJVCXFOBAC2KRS4C4AQZRFGSM6A7H3KRXV552CGMCW --output-dir ../client/src/contracts/fate-verifier",
+        "bindings:relic-registry": "stellar contract bindings typescript --network testnet --network-passphrase \"Test SDF Network ; September 2015\" --contract-id CAOXCTX57AJJA6D2QN5UXDF3OHDZBDBS2J6SKSHI7TOFTMKGKD5Y5H2X --output-dir ../client/src/contracts/relic-registry",
+        "bindings:adventure-vault": "stellar contract bindings typescript --network testnet --network-passphrase \"Test SDF Network ; September 2015\" --contract-id CCIIZ2MFPGV3SIRM3K2ZJFVPG6LMDCROTYUDTKI2GB6OHWZLRSSTGQ6J --output-dir ../client/src/contracts/adventure-vault"
     }
 }
