@@ -4,7 +4,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Backpack, Users, Send, User, Sparkles, Dices, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { Backpack, Users, Send, User, Sparkles, Dices, ShieldAlert, CheckCircle2, X } from 'lucide-react';
 import DraggableItem from './DraggableItem';
 import { DiceType } from '@/components/DiceOverlay';
 import { SERVER_URL } from '@/lib/config';
@@ -311,53 +311,52 @@ export default function InteractionPanel({ triggerRoll }: InteractionPanelProps)
                     </div>
                 </div>
 
-                {/* Action Grids */}
-                <div className="flex gap-4 p-4 border-t border-amber-900/30 bg-[#0a0a0a]/50">
-                    {/* ZK Quest Action (Conditional) */}
-                    {testQuestState === 'combat' && (
-                        <button
-                            onClick={handleZkLootRoll}
-                            className="flex-1 flex flex-col items-center gap-1.5 p-3 rounded-xl bg-gradient-to-r from-emerald-900/40 to-emerald-800/20 border border-emerald-500/30 hover:bg-emerald-800/40 transition-colors group"
-                        >
-                            <ShieldAlert className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform" />
-                            <span className="font-cinzel text-[10px] font-bold text-emerald-200 tracking-wider">Generate ZK Loot</span>
-                        </button>
-                    )}
+                {/* Action Grids - Only show if actions exist */}
+                {(testQuestState === 'combat' || testQuestState === 'completed') && (
+                    <div className="flex gap-4 p-4 border-t border-amber-900/30 bg-[#0a0a0a]/50">
+                        {/* ZK Quest Action (Conditional) */}
+                        {testQuestState === 'combat' && (
+                            <button
+                                onClick={handleZkLootRoll}
+                                className="flex-1 flex flex-col items-center gap-1.5 p-3 rounded-xl bg-gradient-to-r from-emerald-900/40 to-emerald-800/20 border border-emerald-500/30 hover:bg-emerald-800/40 transition-colors group"
+                            >
+                                <ShieldAlert className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform" />
+                                <span className="font-cinzel text-[10px] font-bold text-emerald-200 tracking-wider">Generate ZK Loot</span>
+                            </button>
+                        )}
 
-                    {testQuestState === 'completed' && (
-                        <button
-                            onClick={handleEndQuest}
-                            disabled={isEndingQuest}
-                            className="flex-1 flex flex-col items-center gap-1.5 p-3 rounded-xl bg-gradient-to-r from-amber-700 to-amber-600 border border-amber-500/30 hover:bg-amber-600 transition-colors group"
-                        >
-                            {isEndingQuest ? (
-                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            ) : (
-                                <CheckCircle2 className="w-5 h-5 text-amber-200 group-hover:scale-110 transition-transform" />
-                            )}
-                            <span className="font-cinzel text-[10px] font-bold text-amber-50 tracking-wider">Finalize Quest (On-Chain)</span>
-                        </button>
-                    )}
-
-                    {activeNpc && (
-                        <button
-                            onClick={() => setActiveNpc(null)}
-                            className="flex-1 flex flex-col items-center gap-1.5 p-3 rounded-xl bg-gradient-to-r from-amber-900/40 to-amber-800/20 border border-amber-500/30 hover:bg-amber-800/40 transition-colors group"
-                        >
-                            <User className="w-5 h-5 text-amber-400 group-hover:scale-110 transition-transform" />
-                            <span className="font-cinzel text-[10px] font-bold text-amber-200 tracking-wider">End Conversation</span>
-                        </button>
-                    )}
-                </div>
+                        {testQuestState === 'completed' && (
+                            <button
+                                onClick={handleEndQuest}
+                                disabled={isEndingQuest}
+                                className="flex-1 flex flex-col items-center gap-1.5 p-3 rounded-xl bg-gradient-to-r from-amber-700 to-amber-600 border border-amber-500/30 hover:bg-amber-600 transition-colors group"
+                            >
+                                {isEndingQuest ? (
+                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                    <CheckCircle2 className="w-5 h-5 text-amber-200 group-hover:scale-110 transition-transform" />
+                                )}
+                                <span className="font-cinzel text-[10px] font-bold text-amber-50 tracking-wider">Finalize Quest (On-Chain)</span>
+                            </button>
+                        )}
+                    </div>
+                )}
 
                 {/* Text Input */}
                 <div className="flex gap-3 items-center relative">
                     <div className={`flex-1 flex gap-2 items-center bg-[#050505] border ${activeNpc || isSendingDialog ? 'border-amber-500/50 ring-1 ring-amber-500/50' : 'border-stone-800 focus-within:ring-1 focus-within:ring-amber-500/50 focus-within:border-amber-500/50'} rounded-xl shadow-inner transition-all px-3 h-12`}>
                         {activeNpc && (
-                            <div className="flex items-center gap-2 bg-amber-900/30 text-amber-400 px-2.5 py-1 rounded-md border border-amber-700/50 shadow-[0_0_10px_rgba(245,158,11,0.1)] shrink-0">
+                            <div className="flex items-center gap-2 bg-amber-900/30 text-amber-400 pl-2.5 pr-1 py-1 rounded-md border border-amber-700/50 shadow-[0_0_10px_rgba(245,158,11,0.1)] shrink-0 group/badge">
                                 <span className="text-[10px] font-cinzel font-bold uppercase tracking-widest flex items-center gap-1.5">
                                     <span className="text-amber-600">to:</span> {activeNpc.name}
                                 </span>
+                                <button
+                                    onClick={() => setActiveNpc(null)}
+                                    className="p-0.5 rounded-sm hover:bg-amber-800/50 text-amber-600 hover:text-amber-200 transition-colors"
+                                    title="End Conversation"
+                                >
+                                    <X className="w-3 h-3" />
+                                </button>
                             </div>
                         )}
                         <input

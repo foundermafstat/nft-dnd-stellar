@@ -5,28 +5,32 @@ interface ZkDiceOverlayProps {
     rolling: boolean;
     diceType: string;
     result: number | null;
+    receipt?: string | null;
     onReset: () => void;
 }
 
-export default function ZkDiceOverlay({ rolling, diceType, result, onReset }: ZkDiceOverlayProps) {
+export default function ZkDiceOverlay({ rolling, diceType, result, receipt, onReset }: ZkDiceOverlayProps) {
     const [step, setStep] = useState(0);
 
-    // Simulated ZK Proof stages
+    // Manage ZK Proof stages visually based on whether we have a real result yet
     useEffect(() => {
         if (!rolling) {
             setStep(0);
             return;
         }
 
-        const stages = [
-            setTimeout(() => setStep(1), 500),   // Initiating RISC Zero VM
-            setTimeout(() => setStep(2), 1500),  // Generating Proof
-            setTimeout(() => setStep(3), 2500),  // Verifying Receipt
-            setTimeout(() => setStep(4), 3000),  // Done (Show result natively managed by parent)
-        ];
-
-        return () => stages.forEach(clearTimeout);
-    }, [rolling]);
+        if (result === null) {
+            // Start the loading sequence independently
+            setStep(1);
+            const timer = setTimeout(() => setStep(2), 1000); // Shift to 'generating'
+            return () => clearTimeout(timer);
+        } else {
+            // As soon as the result arrives, advance to Verify, then Done
+            setStep(3); // Verifying Receipt
+            const timer = setTimeout(() => setStep(4), 1000); // Done Show Result
+            return () => clearTimeout(timer);
+        }
+    }, [rolling, result]);
 
     if (!rolling && result === null) return null;
 
@@ -89,8 +93,8 @@ export default function ZkDiceOverlay({ rolling, diceType, result, onReset }: Zk
                     {/* Result Footer */}
                     {step === 4 && (
                         <div className="mt-8 w-full animate-in slide-in-from-bottom-2 fade-in">
-                            <div className="bg-[#111] border border-emerald-900/50 rounded-lg p-3 text-center mb-4 text-xs font-inter text-emerald-400/80">
-                                0x{Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}
+                            <div className="bg-[#111] border border-emerald-900/50 rounded-lg p-3 text-center mb-4 text-xs font-inter text-emerald-400/80 break-all overflow-hidden h-10">
+                                {receipt ? `0x${receipt.substring(0, 60)}...` : 'Verifying Cryptographic Proof...'}
                             </div>
                             <button
                                 onClick={onReset}

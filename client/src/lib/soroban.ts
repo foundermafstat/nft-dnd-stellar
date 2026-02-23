@@ -6,11 +6,13 @@ import {
     xdr,
     Networks,
     Memo,
-    rpc
+    rpc,
+    Keypair
 } from '@stellar/stellar-sdk';
 import { SERVER_URL } from './config';
 
 const GAME_HUB_CONTRACT = 'CB4VZAT2U3UC6XFK3N23SKRF2NDCMP3QHJYMCHHFMZO7MRQO6DQ2EMYG';
+const ADVENTURE_VAULT_CONTRACT = "CCIIZ2MFPGV3SIRM3K2ZJFVPG6LMDCROTYUDTKI2GB6OHWZLRSSTGQ6J";
 
 // Initialize Soroban RPC Server
 const rpcServer = new rpc.Server("https://soroban-testnet.stellar.org");
@@ -21,16 +23,18 @@ export async function startGame(playerAddress: string): Promise<{ success: boole
         const contract = new Contract(GAME_HUB_CONTRACT);
         const sessionId = Math.floor(Math.random() * 1000000);
 
+        const dummyPlayer2 = Keypair.random().publicKey();
+
         const tx = new TransactionBuilder(sourceAccount, {
             fee: "1000",
             networkPassphrase: Networks.TESTNET,
         })
             .addOperation(contract.call(
                 'start_game',
-                new Address(GAME_HUB_CONTRACT).toScVal(), // game_id
+                new Address(ADVENTURE_VAULT_CONTRACT).toScVal(), // game_id (our deployed contract)
                 xdr.ScVal.scvU32(sessionId), // session_id
                 new Address(playerAddress).toScVal(), // player1
-                new Address(playerAddress).toScVal(), // player2 (solo test)
+                new Address(dummyPlayer2).toScVal(), // player2 (solo test)
                 xdr.ScVal.scvI128(new xdr.Int128Parts({ hi: xdr.Int64.fromString("0"), lo: xdr.Uint64.fromString("0") })),
                 xdr.ScVal.scvI128(new xdr.Int128Parts({ hi: xdr.Int64.fromString("0"), lo: xdr.Uint64.fromString("0") })),
             ))

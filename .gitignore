@@ -5,3 +5,4 @@ node_modules
 # Rust / Soroban build artifacts
 contracts/target/
 contracts/Cargo.lock
+server/risc0/target

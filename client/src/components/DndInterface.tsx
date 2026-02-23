@@ -24,43 +24,63 @@ export default function DndInterface({ playerId, walletAddress }: DndInterfacePr
     const [isRolling, setIsRolling] = useState(false);
     const [diceType, setDiceType] = useState<DiceType>('d20');
     const [diceResult, setDiceResult] = useState<number | null>(null);
+    const [zkReceipt, setZkReceipt] = useState<string | null>(null);
 
     const triggerRoll = (type: DiceType) => {
         if (isRolling) return;
         setDiceType(type);
         setIsRolling(true);
         setDiceResult(null);
+        setZkReceipt(null);
 
         if (type === 'ZK_LOOT') {
-            // Simulated delay for ZK Proof generation
-            setTimeout(() => {
-                const result = Math.floor(Math.random() * 100) + 1;
-                setDiceResult(result);
+            const generateZkRoll = async () => {
+                try {
+                    // Start roll procedure; ZkDiceOverlay handles its own internal steps 1 and 2
+                    // We just await the heavy API call here
 
-                // Add message about ZK Loot
-                addMessage({
-                    sender: 'System',
-                    senderType: 'system',
-                    content: `[ZK RECEIPT VERIFIED] Generated loot score: ${result}`,
-                    flavorText: 'Verifying off-chain results...'
-                });
+                    const testSeed = `Quest-${Date.now()}-Loot`;
 
-                // Transition quest to completed
-                const { testQuestState, setTestQuestState } = useGameState.getState();
-                if (testQuestState === 'combat') {
-                    setTestQuestState('completed');
-
-                    // Final dialog
-                    addMessage({
-                        sender: 'Game Master',
-                        senderType: 'dm',
-                        content: 'You have done well. Your trial is complete. Send the final results to the blockchain.',
-                        flavorText: 'He gestures towards the exit.'
+                    const response = await fetch('http://localhost:3001/api/zk/prove-roll', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ seed: testSeed, bound: 100 })
                     });
-                }
 
-                // We don't call setIsRolling(false) immediately because ZkDiceOverlay has its own Continue button
-            }, 3500);
+                    if (!response.ok) throw new Error("Failed to generate ZK Proof");
+                    const data = await response.json();
+
+                    const result = data.result.result;
+                    setDiceResult(result);
+                    setZkReceipt(data.receipt_base64);
+
+                    addMessage({
+                        sender: 'System',
+                        senderType: 'system',
+                        content: `[ZK RECEIPT VERIFIED] Generated loot score: ${result}\nReceipt: ${data.receipt_base64.substring(0, 32)}...`,
+                        flavorText: 'Verifying off-chain results...'
+                    });
+
+                    // Transition quest to completed
+                    const { testQuestState, setTestQuestState } = useGameState.getState();
+                    if (testQuestState === 'combat') {
+                        setTestQuestState('completed');
+
+                        // Final dialog
+                        addMessage({
+                            sender: 'Game Master',
+                            senderType: 'dm',
+                            content: 'You have done well. Your trial is complete. Send the final results to the blockchain.',
+                            flavorText: 'He gestures towards the exit.'
+                        });
+                    }
+                } catch (error) {
+                    console.error("ZK Prove error", error);
+                    setIsRolling(false);
+                }
+            };
+
+            generateZkRoll();
             return;
         }
 
@@ -148,9 +168,11 @@ export default function DndInterface({ playerId, walletAddress }: DndInterfacePr
                                     rolling={isRolling}
                                     diceType="ZK"
                                     result={diceResult}
+                                    receipt={zkReceipt}
                                     onReset={() => {
                                         setIsRolling(false);
                                         setDiceResult(null);
+                                        setZkReceipt(null);
                                     }}
                                 />
                             ) : (
