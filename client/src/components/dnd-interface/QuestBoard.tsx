@@ -5,11 +5,12 @@ import { Scroll, Wallet, CheckCircle2, AlertTriangle, ShieldX } from 'lucide-rea
 
 interface QuestBoardProps {
     playerId: string;
+    walletAddress: string;
     onClose: () => void;
 }
 
-export default function QuestBoard({ playerId, onClose }: QuestBoardProps) {
-    const { testQuestState, setTestQuestState, addMessage } = useGameState();
+export default function QuestBoard({ playerId, walletAddress, onClose }: QuestBoardProps) {
+    const { testQuestState, setTestQuestState, setTestQuestSessionId, addMessage } = useGameState();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -19,10 +20,11 @@ export default function QuestBoard({ playerId, onClose }: QuestBoardProps) {
 
         try {
             // Initiate the Smart Contract Call via Freighter
-            const result = await startGame(playerId);
+            const result = await startGame(walletAddress);
 
             if (result.success) {
                 setTestQuestState('started');
+                if (result.sessionId) setTestQuestSessionId(result.sessionId);
 
                 addMessage({
                     sender: 'System',
@@ -49,7 +51,7 @@ export default function QuestBoard({ playerId, onClose }: QuestBoardProps) {
     };
 
     return (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#050505]/90 backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#050505]/95 backdrop-blur-md animate-in fade-in duration-300">
             <div className="bg-[#0a0a0a] border border-amber-900/50 p-8 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] max-w-lg w-full relative overflow-hidden">
 
                 {/* Decorative borders */}

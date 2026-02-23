@@ -8,7 +8,7 @@ import { SERVER_URL } from '@/lib/config';
 
 
 interface AuthButtonProps {
-    onAuthenticated: (playerId: string) => void;
+    onAuthenticated: (playerId: string, walletAddress: string) => void;
     variant?: 'default' | 'hero' | 'footer';
 }
 
@@ -25,7 +25,10 @@ export default function FreighterAuthButton({ onAuthenticated, variant = 'defaul
                 await setAllowed();
             }
 
-            const pubKey = await requestAccess();
+            const accessRes: any = await requestAccess();
+            const pubKey = typeof accessRes === 'string' ? accessRes : accessRes.address;
+
+            if (!pubKey) throw new Error('Could not retrieve public key from Freighter');
 
 
 
@@ -41,7 +44,7 @@ export default function FreighterAuthButton({ onAuthenticated, variant = 'defaul
 
             const { player } = await response.json();
 
-            onAuthenticated(player.id);
+            onAuthenticated(player.id, pubKey);
 
         } catch (err: any) {
             console.error(err);

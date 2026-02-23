@@ -4,19 +4,35 @@ import { useDroppable } from '@dnd-kit/core';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Backpack, Users, Send, User, Sparkles, Dices } from 'lucide-react';
+import { Backpack, Users, Send, User, Sparkles, Dices, ShieldAlert, CheckCircle2 } from 'lucide-react';
 import DraggableItem from './DraggableItem';
 import { DiceType } from '@/components/DiceOverlay';
 import { SERVER_URL } from '@/lib/config';
+import { endGame } from '@/lib/soroban';
+import { useAuth } from '@/context/AuthContext';
 
 interface InteractionPanelProps {
     triggerRoll: (type: DiceType) => void;
 }
 
 export default function InteractionPanel({ triggerRoll }: InteractionPanelProps) {
-    const { chatMessages, addMessage, currentTurn, setTurn, activeNpc, setActiveNpc, entities } = useGameState();
+    const {
+        chatMessages,
+        addMessage,
+        currentTurn,
+        setTurn,
+        activeNpc,
+        setActiveNpc,
+        entities,
+        testQuestState,
+        setTestQuestState,
+        testQuestSessionId
+    } = useGameState();
+    const { playerId, walletAddress } = useAuth();
     const [inputText, setInputText] = useState('');
     const [isSendingDialog, setIsSendingDialog] = useState(false);
+    const [isEndingQuest, setIsEndingQuest] = useState(false);
+    const [hasRolled, setHasRolled] = useState(false);
     const [activeMenu, setActiveMenu] = useState<'inventory' | 'party' | 'playerInfo' | 'skills' | 'dice' | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -123,7 +139,7 @@ export default function InteractionPanel({ triggerRoll }: InteractionPanelProps)
     // Trigger generic dice roll
     const handleDiceRollLocal = (sides: number) => {
         setHasRolled(true);
-        triggerRoll(`D${sides}`);
+        triggerRoll(`d${sides}` as any);
     };
 
     // Trigger Hackathon Test Quest ZK Simulation
@@ -134,6 +150,28 @@ export default function InteractionPanel({ triggerRoll }: InteractionPanelProps)
         }
 
         triggerRoll('ZK_LOOT');
+    };
+
+    const handleEndQuest = async () => {
+        if (!walletAddress || !testQuestSessionId) return;
+        setIsEndingQuest(true);
+        try {
+            const res = await endGame(walletAddress, testQuestSessionId);
+            if (res.success) {
+                setTestQuestState('not_started');
+                addMessage({
+                    sender: 'System',
+                    senderType: 'system',
+                    content: `Quest Finalized! Tx Hash: ${res.hash?.substring(0, 10)}... Reward minted to your wallet.`
+                });
+            } else {
+                addMessage({ sender: 'System', senderType: 'system', content: `End Game Error: ${res.error}` });
+            }
+        } catch (err: any) {
+            addMessage({ sender: 'System', senderType: 'system', content: `Error: ${err.message}` });
+        } finally {
+            setIsEndingQuest(false);
+        }
     };
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -283,6 +321,21 @@ export default function InteractionPanel({ triggerRoll }: InteractionPanelProps)
                         >
                             <ShieldAlert className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform" />
                             <span className="font-cinzel text-[10px] font-bold text-emerald-200 tracking-wider">Generate ZK Loot</span>
+                        </button>
+                    )}
+
+                    {testQuestState === 'completed' && (
+                        <button
+                            onClick={handleEndQuest}
+                            disabled={isEndingQuest}
+                            className="flex-1 flex flex-col items-center gap-1.5 p-3 rounded-xl bg-gradient-to-r from-amber-700 to-amber-600 border border-amber-500/30 hover:bg-amber-600 transition-colors group"
+                        >
+                            {isEndingQuest ? (
+                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            ) : (
+                                <CheckCircle2 className="w-5 h-5 text-amber-200 group-hover:scale-110 transition-transform" />
+                            )}
+                            <span className="font-cinzel text-[10px] font-bold text-amber-50 tracking-wider">Finalize Quest (On-Chain)</span>
                         </button>
                     )}
 

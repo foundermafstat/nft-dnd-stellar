@@ -173,7 +173,7 @@ function PremiumCard({
 }
 
 interface WelcomeScreenProps {
-    onAuth: (id: string | null) => void;
+    onAuth: (playerId: string | null, walletAddress: string | null) => void;
 }
 
 export default function WelcomeScreen({ onAuth }: WelcomeScreenProps) {

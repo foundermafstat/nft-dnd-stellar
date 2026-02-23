@@ -41,6 +41,8 @@ interface GameState {
     // Test Quest State
     testQuestState: TestQuestState;
     setTestQuestState: (state: TestQuestState) => void;
+    testQuestSessionId: number | null;
+    setTestQuestSessionId: (id: number | null) => void;
 
     // NPC Dialog State
     activeNpc: { id: string, name: string } | null;
@@ -72,6 +74,8 @@ export const useGameState = create<GameState>((set) => ({
 
     testQuestState: 'not_started',
     setTestQuestState: (state) => set({ testQuestState: state }),
+    testQuestSessionId: null,
+    setTestQuestSessionId: (id) => set({ testQuestSessionId: id }),
 
     activeNpc: null,
     setActiveNpc: (npc) => set({ activeNpc: npc }),

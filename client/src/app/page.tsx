@@ -10,7 +10,7 @@ import { SERVER_URL } from "@/lib/config";
 import { useGameState } from "@/store/useGameState";
 
 export default function Home() {
-  const { playerId, setPlayerId, isLoading } = useAuth();
+  const { playerId, walletAddress, setAuth, isLoading } = useAuth();
   const router = useRouter();
   const setPlayerCharacter = useGameState(state => state.setPlayerCharacter);
 
@@ -58,7 +58,7 @@ export default function Home() {
         {/* Render Canvas and Fixed Overlays ONLY when logged in and has characters */}
         {playerId && characters !== null ? (
           characters.length > 0 ? (
-            <DndInterface playerId={playerId} />
+            <DndInterface playerId={playerId} walletAddress={walletAddress || ''} />
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-center relative z-20">
               {/* Subtle ambient glow behind the card */}
@@ -92,7 +92,7 @@ export default function Home() {
             </div>
           )
         ) : (
-          <WelcomeScreen onAuth={setPlayerId} />
+          <WelcomeScreen onAuth={setAuth} />
         )}
       </div>
 

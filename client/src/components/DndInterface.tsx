@@ -7,12 +7,15 @@ import Header from './dnd-interface/Header';
 import InteractionPanel from './dnd-interface/InteractionPanel';
 import DraggableItem from './dnd-interface/DraggableItem';
 import { useGameState } from '@/store/useGameState';
+import ZkDiceOverlay from './dnd-interface/ZkDiceOverlay';
+import { endGame } from '@/lib/soroban';
 
 interface DndInterfaceProps {
     playerId: string;
+    walletAddress: string;
 }
 
-export default function DndInterface({ playerId }: DndInterfaceProps) {
+export default function DndInterface({ playerId, walletAddress }: DndInterfaceProps) {
     const { inventory, addToInventory, removeFromInventory, addMessage } = useGameState();
     const [activeDragId, setActiveDragId] = useState<string | null>(null);
     const [activeDragSource, setActiveDragSource] = useState<'chat' | 'inventory' | null>(null);
@@ -28,8 +31,41 @@ export default function DndInterface({ playerId }: DndInterfaceProps) {
         setIsRolling(true);
         setDiceResult(null);
 
+        if (type === 'ZK_LOOT') {
+            // Simulated delay for ZK Proof generation
+            setTimeout(() => {
+                const result = Math.floor(Math.random() * 100) + 1;
+                setDiceResult(result);
+
+                // Add message about ZK Loot
+                addMessage({
+                    sender: 'System',
+                    senderType: 'system',
+                    content: `[ZK RECEIPT VERIFIED] Generated loot score: ${result}`,
+                    flavorText: 'Verifying off-chain results...'
+                });
+
+                // Transition quest to completed
+                const { testQuestState, setTestQuestState } = useGameState.getState();
+                if (testQuestState === 'combat') {
+                    setTestQuestState('completed');
+
+                    // Final dialog
+                    addMessage({
+                        sender: 'Game Master',
+                        senderType: 'dm',
+                        content: 'You have done well. Your trial is complete. Send the final results to the blockchain.',
+                        flavorText: 'He gestures towards the exit.'
+                    });
+                }
+
+                // We don't call setIsRolling(false) immediately because ZkDiceOverlay has its own Continue button
+            }, 3500);
+            return;
+        }
+
         setTimeout(() => {
-            let max = parseInt(type.substring(1));
+            const max = parseInt(type.substring(1)) || 20;
             const result = Math.floor(Math.random() * max) + 1;
             setDiceResult(result);
 
@@ -95,7 +131,7 @@ export default function DndInterface({ playerId }: DndInterfaceProps) {
         <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} collisionDetection={pointerWithin}>
             <div className="flex flex-col h-screen w-full bg-[#050505] text-amber-50 overflow-hidden font-inter selection:bg-amber-900/50 selection:text-amber-100">
                 {/* Global Header */}
-                <Header />
+                <Header walletAddress={walletAddress} />
 
                 {/* Resizable Workspaces */}
                 <ResizablePanelGroup direction="horizontal" className="flex-1 w-full h-full">
@@ -106,15 +142,28 @@ export default function DndInterface({ playerId }: DndInterfaceProps) {
                         {/* The 3D Canvas */}
                         <div className="w-full h-full relative cursor-crosshair">
                             <GameCanvas playerId={playerId} />
-                            <DiceOverlay
-                                rolling={isRolling}
-                                diceType={diceType}
-                                result={diceResult}
-                                onReset={() => {
-                                    setIsRolling(false);
-                                    setDiceResult(null);
-                                }}
-                            />
+
+                            {diceType === 'ZK_LOOT' ? (
+                                <ZkDiceOverlay
+                                    rolling={isRolling}
+                                    diceType="ZK"
+                                    result={diceResult}
+                                    onReset={() => {
+                                        setIsRolling(false);
+                                        setDiceResult(null);
+                                    }}
+                                />
+                            ) : (
+                                <DiceOverlay
+                                    rolling={isRolling}
+                                    diceType={diceType}
+                                    result={diceResult}
+                                    onReset={() => {
+                                        setIsRolling(false);
+                                        setDiceResult(null);
+                                    }}
+                                />
+                            )}
                         </div>
                     </ResizablePanel>
 

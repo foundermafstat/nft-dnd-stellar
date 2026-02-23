@@ -228,7 +228,7 @@ function Dice({ type, isRolling, serverResult, onSettled }: DiceProps) {
 
 // ─── MAIN OVERLAY (BG3-style cinematic) ──────────────────────────
 
-export type DiceType = 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20';
+export type DiceType = 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'ZK_LOOT';
 
 interface OverlayProps {
     rolling: boolean;
@@ -392,7 +392,7 @@ export default function DiceOverlay({ rolling, diceType, result, onReset }: Over
                         <TableFloor />
                         <Walls />
                         <Dice
-                            type={diceType}
+                            type={diceType as any}
                             isRolling={rolling}
                             serverResult={result}
                             onSettled={() => { }}

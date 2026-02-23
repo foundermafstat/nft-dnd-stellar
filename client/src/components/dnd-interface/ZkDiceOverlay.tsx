@@ -31,7 +31,7 @@ export default function ZkDiceOverlay({ rolling, diceType, result, onReset }: Zk
     if (!rolling && result === null) return null;
 
     return (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#050505]/80 backdrop-blur-md animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#050505]/80 backdrop-blur-md animate-in fade-in duration-300">
             <div className="bg-[#0a0a0a] border border-amber-900/40 rounded-2xl w-full max-w-sm overflow-hidden shadow-[0_0_50px_rgba(245,158,11,0.15)] relative">
 
                 {/* Background Grid Pattern */}

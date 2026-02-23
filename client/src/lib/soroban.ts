@@ -15,25 +15,34 @@ const GAME_HUB_CONTRACT = 'CB4VZAT2U3UC6XFK3N23SKRF2NDCMP3QHJYMCHHFMZO7MRQO6DQ2E
 // Initialize Soroban RPC Server
 const rpcServer = new rpc.Server("https://soroban-testnet.stellar.org");
 
-export async function startGame(playerAddress: string): Promise<{ success: boolean; hash?: string; error?: string }> {
+export async function startGame(playerAddress: string): Promise<{ success: boolean; hash?: string; sessionId?: number; error?: string }> {
     try {
         const sourceAccount = await rpcServer.getAccount(playerAddress);
         const contract = new Contract(GAME_HUB_CONTRACT);
+        const sessionId = Math.floor(Math.random() * 1000000);
 
-        // Typical start_game invocation. Note: If the contract requires a fee or token transfer, 
-        // the arguments might need to include a token address or an amount.
-        // We will assume a simple start_game(player: Address) for the hackathon MVP.
         const tx = new TransactionBuilder(sourceAccount, {
             fee: "1000",
             networkPassphrase: Networks.TESTNET,
         })
-            .addOperation(contract.call('start_game', new Address(playerAddress).toScVal()))
+            .addOperation(contract.call(
+                'start_game',
+                new Address(GAME_HUB_CONTRACT).toScVal(), // game_id
+                xdr.ScVal.scvU32(sessionId), // session_id
+                new Address(playerAddress).toScVal(), // player1
+                new Address(playerAddress).toScVal(), // player2 (solo test)
+                xdr.ScVal.scvI128(new xdr.Int128Parts({ hi: xdr.Int64.fromString("0"), lo: xdr.Uint64.fromString("0") })),
+                xdr.ScVal.scvI128(new xdr.Int128Parts({ hi: xdr.Int64.fromString("0"), lo: xdr.Uint64.fromString("0") })),
+            ))
             .addMemo(Memo.text('NFT-DND: Start Quest'))
             .setTimeout(30)
             .build();
 
         const preparedTx = await rpcServer.prepareTransaction(tx);
-        const signedXdr = await signTransaction(preparedTx.toXDR(), { networkPassphrase: Networks.TESTNET });
+        const signResult: any = await signTransaction(preparedTx.toXDR(), { networkPassphrase: Networks.TESTNET });
+
+        if (signResult.error) throw new Error(signResult.error);
+        const signedXdr = typeof signResult === 'string' ? signResult : signResult.signedTxXdr;
 
         const signedTx = TransactionBuilder.fromXDR(signedXdr, Networks.TESTNET);
         const sendResponse = await rpcServer.sendTransaction(signedTx);
@@ -52,7 +61,7 @@ export async function startGame(playerAddress: string): Promise<{ success: boole
         }
 
         if (txResponse.status === 'SUCCESS') {
-            return { success: true, hash: sendResponse.hash };
+            return { success: true, hash: sendResponse.hash, sessionId };
         } else {
             return { success: false, error: 'Transaction failed on-chain.' };
         }
@@ -63,28 +72,30 @@ export async function startGame(playerAddress: string): Promise<{ success: boole
     }
 }
 
-export async function endGame(playerAddress: string, score: number, zkProofHash: string): Promise<{ success: boolean; hash?: string; error?: string }> {
+export async function endGame(playerAddress: string, sessionId: number): Promise<{ success: boolean; hash?: string; error?: string }> {
     try {
         const sourceAccount = await rpcServer.getAccount(playerAddress);
         const contract = new Contract(GAME_HUB_CONTRACT);
 
-        // Assume end_game(player: Address, score: u32, zk_proof: String)
+        // Match ABI: end_game(session_id: u32, player1_won: bool)
         const tx = new TransactionBuilder(sourceAccount, {
             fee: "1000",
             networkPassphrase: Networks.TESTNET,
         })
             .addOperation(contract.call(
                 'end_game',
-                new Address(playerAddress).toScVal(),
-                xdr.ScVal.scvU32(score),
-                xdr.ScVal.scvString(zkProofHash)
+                xdr.ScVal.scvU32(sessionId),
+                xdr.ScVal.scvBool(true)
             ))
             .addMemo(Memo.text('NFT-DND: End Quest'))
             .setTimeout(30)
             .build();
 
         const preparedTx = await rpcServer.prepareTransaction(tx);
-        const signedXdr = await signTransaction(preparedTx.toXDR(), { networkPassphrase: Networks.TESTNET });
+        const signResult: any = await signTransaction(preparedTx.toXDR(), { networkPassphrase: Networks.TESTNET });
+
+        if (signResult.error) throw new Error(signResult.error);
+        const signedXdr = typeof signResult === 'string' ? signResult : signResult.signedTxXdr;
 
         const signedTx = TransactionBuilder.fromXDR(signedXdr, Networks.TESTNET);
         const sendResponse = await rpcServer.sendTransaction(signedTx);

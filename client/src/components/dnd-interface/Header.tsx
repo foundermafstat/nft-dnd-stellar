@@ -12,8 +12,13 @@ import { useGameState } from '@/store/useGameState';
 import QuestBoard from './QuestBoard';
 import { useState } from 'react';
 
-export default function Header() {
-    const { playerId, logout } = useAuth();
+interface HeaderProps {
+    walletAddress?: string;
+}
+
+export default function Header({ walletAddress: propWallet }: HeaderProps) {
+    const { playerId, walletAddress: authWallet, logout } = useAuth();
+    const walletAddress = propWallet || authWallet;
     const { currentTurn } = useGameState();
     const [showQuestBoard, setShowQuestBoard] = useState(false);
 
@@ -104,8 +109,8 @@ export default function Header() {
                 )}
             </div>
 
-            {showQuestBoard && playerId && (
-                <QuestBoard playerId={playerId} onClose={() => setShowQuestBoard(false)} />
+            {showQuestBoard && playerId && walletAddress && (
+                <QuestBoard playerId={playerId} walletAddress={walletAddress} onClose={() => setShowQuestBoard(false)} />
             )}
         </div>
     );
