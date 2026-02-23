@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 
 export type ActorType = 'player' | 'enemy' | 'ally' | 'system' | 'dm';
+export type TurnOrder = 'player' | 'enemy' | 'ally';
+export type TestQuestState = 'not_started' | 'started' | 'npc_dialog' | 'combat' | 'loot' | 'completed';
 
 export interface ChatMessage {
     id: string;
@@ -33,8 +35,12 @@ export interface Entity {
 
 interface GameState {
     // Turn State
-    currentTurn: ActorType;
-    setTurn: (turn: ActorType) => void;
+    currentTurn: TurnOrder;
+    setTurn: (turn: TurnOrder) => void;
+
+    // Test Quest State
+    testQuestState: TestQuestState;
+    setTestQuestState: (state: TestQuestState) => void;
 
     // NPC Dialog State
     activeNpc: { id: string, name: string } | null;
@@ -63,6 +69,9 @@ interface GameState {
 export const useGameState = create<GameState>((set) => ({
     currentTurn: 'player',
     setTurn: (turn) => set({ currentTurn: turn }),
+
+    testQuestState: 'not_started',
+    setTestQuestState: (state) => set({ testQuestState: state }),
 
     activeNpc: null,
     setActiveNpc: (npc) => set({ activeNpc: npc }),

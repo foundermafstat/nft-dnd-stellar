@@ -61,6 +61,20 @@ export default function InteractionPanel({ triggerRoll }: InteractionPanelProps)
         if (activeNpc) {
             // NPC Conversation Mode
             addMessage({ sender: 'Player', senderType: 'player', content: textToRoute });
+
+            // Hackathon Test Quest Progression 
+            if (activeNpc.name === 'Game Master' && testQuestState === 'started') {
+                setTestQuestState('npc_dialog');
+                addMessage({
+                    sender: 'Game Master',
+                    senderType: 'dm',
+                    content: 'Excellent. Your path is clear. Proceed into the wilds and prove your strength against the Goblin! After your victory, claim your prize.',
+                    flavorText: 'He nods approvingly, vanishing into the shadows.'
+                });
+                setActiveNpc(null);
+                return;
+            }
+
             setIsSendingDialog(true);
             try {
                 // Filter chat log to just the conversation history (approx 10 messages for context)
@@ -104,6 +118,22 @@ export default function InteractionPanel({ triggerRoll }: InteractionPanelProps)
                 setActiveNpc({ id: msg.sender, name: msg.sender });
             }
         }
+    };
+
+    // Trigger generic dice roll
+    const handleDiceRollLocal = (sides: number) => {
+        setHasRolled(true);
+        triggerRoll(`D${sides}`);
+    };
+
+    // Trigger Hackathon Test Quest ZK Simulation
+    const handleZkLootRoll = () => {
+        if (testQuestState !== 'combat') {
+            addMessage({ sender: 'System', senderType: 'system', content: 'You must defeat the Goblin first.' });
+            return;
+        }
+
+        triggerRoll('ZK_LOOT');
     };
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -243,6 +273,30 @@ export default function InteractionPanel({ triggerRoll }: InteractionPanelProps)
                     </div>
                 </div>
 
+                {/* Action Grids */}
+                <div className="flex gap-4 p-4 border-t border-amber-900/30 bg-[#0a0a0a]/50">
+                    {/* ZK Quest Action (Conditional) */}
+                    {testQuestState === 'combat' && (
+                        <button
+                            onClick={handleZkLootRoll}
+                            className="flex-1 flex flex-col items-center gap-1.5 p-3 rounded-xl bg-gradient-to-r from-emerald-900/40 to-emerald-800/20 border border-emerald-500/30 hover:bg-emerald-800/40 transition-colors group"
+                        >
+                            <ShieldAlert className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform" />
+                            <span className="font-cinzel text-[10px] font-bold text-emerald-200 tracking-wider">Generate ZK Loot</span>
+                        </button>
+                    )}
+
+                    {activeNpc && (
+                        <button
+                            onClick={() => setActiveNpc(null)}
+                            className="flex-1 flex flex-col items-center gap-1.5 p-3 rounded-xl bg-gradient-to-r from-amber-900/40 to-amber-800/20 border border-amber-500/30 hover:bg-amber-800/40 transition-colors group"
+                        >
+                            <User className="w-5 h-5 text-amber-400 group-hover:scale-110 transition-transform" />
+                            <span className="font-cinzel text-[10px] font-bold text-amber-200 tracking-wider">End Conversation</span>
+                        </button>
+                    )}
+                </div>
+
                 {/* Text Input */}
                 <div className="flex gap-3 items-center relative">
                     <div className={`flex-1 flex gap-2 items-center bg-[#050505] border ${activeNpc || isSendingDialog ? 'border-amber-500/50 ring-1 ring-amber-500/50' : 'border-stone-800 focus-within:ring-1 focus-within:ring-amber-500/50 focus-within:border-amber-500/50'} rounded-xl shadow-inner transition-all px-3 h-12`}>
@@ -251,13 +305,6 @@ export default function InteractionPanel({ triggerRoll }: InteractionPanelProps)
                                 <span className="text-[10px] font-cinzel font-bold uppercase tracking-widest flex items-center gap-1.5">
                                     <span className="text-amber-600">to:</span> {activeNpc.name}
                                 </span>
-                                <button
-                                    onClick={() => setActiveNpc(null)}
-                                    className="text-amber-600 hover:text-red-400 transition-colors"
-                                    title="Clear target"
-                                >
-                                    ✕
-                                </button>
                             </div>
                         )}
                         <input

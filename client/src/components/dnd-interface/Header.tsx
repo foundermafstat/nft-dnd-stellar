@@ -9,10 +9,13 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useGameState } from '@/store/useGameState';
+import QuestBoard from './QuestBoard';
+import { useState } from 'react';
 
 export default function Header() {
     const { playerId, logout } = useAuth();
     const { currentTurn } = useGameState();
+    const [showQuestBoard, setShowQuestBoard] = useState(false);
 
     const handleLogout = () => {
         logout();
@@ -51,16 +54,12 @@ export default function Header() {
                             </DropdownMenuContent>
                         </DropdownMenu>
 
-                        <DropdownMenu>
-                            <DropdownMenuTrigger className="flex items-center gap-2 px-3 py-2 text-xs font-cinzel font-bold tracking-[0.2em] uppercase text-stone-400 hover:text-amber-400 transition-colors dropdown-open:text-amber-400 outline-none group rounded-lg hover:bg-amber-900/10">
-                                <Settings className="w-4 h-4 group-hover:drop-shadow-[0_0_5px_rgba(245,158,11,0.5)] transition-all" /> Options <ChevronDown className="w-3 h-3 opacity-50" />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start" className="w-56 bg-[#0a0a0a] border border-amber-900/40 shadow-2xl backdrop-blur-xl">
-                                <DropdownMenuLabel className="font-cinzel text-[10px] tracking-[0.2em] uppercase text-amber-500/70 border-b border-amber-900/20 pb-2 mb-2">Game Settings</DropdownMenuLabel>
-                                <DropdownMenuItem className="cursor-pointer font-inter text-stone-300 hover:text-amber-300 focus:bg-amber-900/20 focus:text-amber-300 transition-colors py-2 text-sm">Audio</DropdownMenuItem>
-                                <DropdownMenuItem className="cursor-pointer font-inter text-stone-300 hover:text-amber-300 focus:bg-amber-900/20 focus:text-amber-300 transition-colors py-2 text-sm">Interface</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <button
+                            onClick={() => setShowQuestBoard(true)}
+                            className="flex items-center gap-2 px-3 py-2 text-xs font-cinzel font-bold tracking-[0.2em] uppercase text-amber-500 hover:text-amber-300 transition-colors outline-none group rounded-lg bg-amber-900/20 border border-amber-900/50 hover:bg-amber-900/40"
+                        >
+                            <Scroll className="w-4 h-4 group-hover:drop-shadow-[0_0_5px_rgba(245,158,11,0.5)] transition-all" /> Test Quest
+                        </button>
                     </div>
                 )}
             </div>
@@ -104,6 +103,10 @@ export default function Header() {
                     <div className="text-xs font-cinzel tracking-widest text-stone-500 uppercase">Not connected</div>
                 )}
             </div>
+
+            {showQuestBoard && playerId && (
+                <QuestBoard playerId={playerId} onClose={() => setShowQuestBoard(false)} />
+            )}
         </div>
     );
 }
