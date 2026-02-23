@@ -34,6 +34,10 @@ interface GameState {
     currentTurn: ActorType;
     setTurn: (turn: ActorType) => void;
 
+    // NPC Dialog State
+    activeNpc: { id: string, name: string } | null;
+    setActiveNpc: (npc: { id: string, name: string } | null) => void;
+
     // Chat Log
     chatMessages: ChatMessage[];
     addMessage: (msg: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
@@ -48,11 +52,18 @@ interface GameState {
     entities: Entity[];
     setEntities: (entities: Entity[]) => void;
     updateEntityHp: (id: string, hpOffset: number) => void;
+
+    // Player Data
+    playerCharacter: any | null;
+    setPlayerCharacter: (char: any | null) => void;
 }
 
 export const useGameState = create<GameState>((set) => ({
     currentTurn: 'player',
     setTurn: (turn) => set({ currentTurn: turn }),
+
+    activeNpc: null,
+    setActiveNpc: (npc) => set({ activeNpc: npc }),
 
     chatMessages: [
         {
@@ -100,4 +111,7 @@ export const useGameState = create<GameState>((set) => ({
                 return e;
             }),
         })),
+
+    playerCharacter: null,
+    setPlayerCharacter: (char) => set({ playerCharacter: char }),
 }));

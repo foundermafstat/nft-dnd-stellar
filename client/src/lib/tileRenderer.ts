@@ -325,6 +325,7 @@ export function renderPlayer(
     cameraX: number,
     cameraY: number,
     isLocalPlayer: boolean = false,
+    name?: string,
 ) {
     const px = tileX * tileSize - cameraX + tileSize / 2;
     const py = tileY * tileSize - cameraY + tileSize / 2;
@@ -354,6 +355,18 @@ export function renderPlayer(
     ctx.arc(px - radius * 0.2, py - radius * 0.2, radius * 0.3, 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.fill();
+
+    // Draw Name Label
+    if (name) {
+        ctx.font = 'bold 10px cinzel, serif';
+        const labelW = ctx.measureText(name).width;
+        ctx.fillStyle = 'rgba(5, 4, 3, 0.8)';
+        ctx.fillRect(px - labelW / 2 - 4, py - radius - 20, labelW + 8, 16);
+        ctx.fillStyle = isLocalPlayer ? '#fcd34d' : '#a8a29e'; // amber-300 or stone-400
+        ctx.textAlign = 'center';
+        ctx.fillText(name, px, py - radius - 9);
+        ctx.textAlign = 'start';
+    }
 }
 
 /**

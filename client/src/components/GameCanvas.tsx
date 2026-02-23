@@ -4,11 +4,10 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { renderLocation, renderPlayer, renderFogOfWar, isTileWalkable } from '@/lib/tileRenderer';
 import { findPath, PathNode } from '@/lib/pathfinding';
-import { LocationMap, LocationExit, TileType, CombatState, CombatEntity } from 'shared';
-import TransitionModal from './TransitionModal';
+import { LocationMap, LocationExit, TileType, CombatState } from 'shared';
 import Tooltip from './Tooltip';
-import NpcDialog from './NpcDialog';
 import CombatOverlay from './CombatOverlay';
+import { useGameState } from '@/store/useGameState';
 
 interface PlayerNode {
     id: string;
@@ -53,7 +52,9 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
     const [pendingExit, setPendingExit] = useState<LocationExit | null>(null);
     const [npcs, setNpcs] = useState<NpcNode[]>([]);
     const [hoveredEntity, setHoveredEntity] = useState<HoveredEntity | null>(null);
-    const [activeNpc, setActiveNpc] = useState<NpcNode | null>(null);
+
+    // Global Interaction State
+    const { setActiveNpc, addMessage, playerCharacter } = useGameState();
 
     // Combat state
     const [combatState, setCombatState] = useState<CombatState | null>(null);
@@ -61,7 +62,6 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
 
     // Pathfinding state
     const [previewPath, setPreviewPath] = useState<PathNode[]>([]);
-    const [isWalking, setIsWalking] = useState(false);
 
     const myId = useRef(playerId);
     const myColor = useRef(`hsl(${Math.floor(Math.random() * 360)}, 70%, 55%)`);
@@ -138,6 +138,14 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
 
                 subscribeToLocation(map.id);
                 await loadNpcs(map.id);
+
+                // System message on arrival
+                addMessage({
+                    sender: 'System',
+                    senderType: 'system',
+                    content: `You have arrived at ${map.name}.`
+                });
+
             } else {
                 loadFallbackLocation();
             }
@@ -241,7 +249,6 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
     // ── Walk along path step-by-step ───────────────────────────────────
     async function walkPath(path: PathNode[]) {
         if (path.length === 0) return;
-        setIsWalking(true);
         walkingRef.current = true;
         setPreviewPath([]);
 
@@ -259,7 +266,9 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
             if (i === path.length - 1) {
                 const exit = findExitAtTile(step.x, step.y);
                 if (exit) {
-                    setPendingExit(exit);
+                    // trigger automatic transition
+                    walkingRef.current = false;
+                    loadLocationById(exit.target_location_id, exit.spawn_label);
                     break;
                 }
             }
@@ -273,13 +282,16 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
             }
         }
 
-        setIsWalking(false);
         walkingRef.current = false;
     }
 
     // ── Click handler: pathfind & walk ──────────────────────────────────
     const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
         if (!locationMap || !canvasRef.current || pendingExit) return;
+
+        // If an NPC is currently active in the panel, clicking the canvas deselects them
+        setActiveNpc(null);
+
         const canvas = canvasRef.current;
         const rect = canvas.getBoundingClientRect();
         const clickX = e.clientX - rect.left;
@@ -299,10 +311,10 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
             walkingRef.current = false;
         }
 
-        // Check if clicking an NPC when adjacent → open dialog
+        // Check if clicking an NPC when adjacent → select globally
         const clickedNpc = npcAtTile(tileX, tileY);
         if (clickedNpc && isAdjacent(myPosRef.current.tileX, myPosRef.current.tileY, tileX, tileY)) {
-            setActiveNpc(clickedNpc);
+            setActiveNpc({ id: clickedNpc.id, name: clickedNpc.name });
             return;
         }
 
@@ -326,7 +338,7 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
                 walkPath(bestPath).then(() => {
                     // After walking, check if now adjacent
                     if (isAdjacent(myPosRef.current.tileX, myPosRef.current.tileY, tileX, tileY)) {
-                        setActiveNpc(clickedNpc);
+                        setActiveNpc({ id: clickedNpc.id, name: clickedNpc.name });
                     }
                 });
             }
@@ -429,17 +441,10 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
         setPreviewPath([]);
     }, []);
 
-    // ── Transition handlers ────────────────────────────────────────────
-    function handleTransitionConfirm() {
-        if (!pendingExit) return;
-        const exit = pendingExit;
-        setPendingExit(null);
-        walkingRef.current = false;
-        setIsWalking(false);
-        loadLocationById(exit.target_location_id, exit.spawn_label);
-    }
-
-    function handleTransitionCancel() { setPendingExit(null); }
+    // ── Pre-existing transition handlers (deprecated) ───────────────────────
+    // Modals have been removed in favor of automatic transitions.
+    // function handleTransitionConfirm() ... 
+    // function handleTransitionCancel() ...
 
     // ── Fallback location ──────────────────────────────────────────────
     function loadFallbackLocation() {
@@ -649,24 +654,7 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
                 />
             )}
 
-            {/* Transition modal */}
-            {pendingExit && (
-                <TransitionModal
-                    targetName={pendingExit.target_location_name}
-                    onConfirm={handleTransitionConfirm}
-                    onCancel={handleTransitionCancel}
-                />
-            )}
-
-            {/* NPC Dialog */}
-            {activeNpc && (
-                <NpcDialog
-                    npcId={activeNpc.id}
-                    npcName={activeNpc.name}
-                    npcTitle={activeNpc.title}
-                    onClose={() => setActiveNpc(null)}
-                />
-            )}
+            {/* Transition and NPC Modals have been removed and synchronized with the InteractionPanel */}
 
             {/* Combat Overlay */}
             {combatState && combatState.status !== 'VICTORY' && combatState.status !== 'DEFEAT' && (

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Dices, Save, Sparkles, Minus, Plus } from 'lucide-react';
+import { ChevronLeft, Dices, Save, Sparkles, Minus, Plus, ChevronDown } from 'lucide-react';
 import { HeroClass } from '../../../../shared/src/models/player';
 import { Ancestry, ANCESTRIES, calculateModifier } from '../../../../shared/src/models/rules';
 import { useAuth } from '@/context/AuthContext';
@@ -18,31 +18,31 @@ function StatRow({ label, value, min, max, availablePoints, onChange }: { label:
     const canIncrease = value < max && availablePoints > 0;
 
     return (
-        <div className="flex items-center justify-between py-2 border-b border-border">
+        <div className="flex items-center justify-between py-3 border-b border-amber-900/20">
             <div className="flex flex-col">
-                <span className="font-mono text-sm uppercase tracking-widest text-muted-foreground">{label}</span>
-                <span className="text-[10px] text-muted-foreground font-mono">Min: {min} / Max: {max}</span>
+                <span className="font-cinzel text-sm uppercase tracking-widest text-amber-700/80 font-bold">{label}</span>
+                <span className="text-[10px] text-stone-500 font-inter">Min: {min} / Max: {max}</span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
                 <button
                     onClick={() => canDecrease && onChange(value - 1)}
                     disabled={!canDecrease}
-                    className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-accent-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="p-1.5 hover:bg-amber-900/20 rounded-md text-stone-400 hover:text-amber-400 border border-transparent hover:border-amber-900/50 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                     <Minus className="w-4 h-4" />
                 </button>
 
-                <span className="font-serif text-xl text-foreground w-8 text-center">{value}</span>
+                <span className="font-cinzel font-bold text-2xl text-amber-50 w-8 text-center drop-shadow-sm">{value}</span>
 
                 <button
                     onClick={() => canIncrease && onChange(value + 1)}
                     disabled={!canIncrease}
-                    className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-accent-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="p-1.5 hover:bg-amber-900/20 rounded-md text-stone-400 hover:text-amber-400 border border-transparent hover:border-amber-900/50 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                     <Plus className="w-4 h-4" />
                 </button>
 
-                <span className={`font-mono text-sm min-w-[30px] text-right ${colorClass}`}>{modStr}</span>
+                <span className={`font-inter font-semibold text-sm min-w-[30px] text-right ${colorClass}`}>{modStr}</span>
             </div>
         </div>
     );
@@ -234,30 +234,29 @@ export default function CreateHeroPage() {
     };
 
     return (
-        <div className="absolute inset-0 w-full h-full bg-background text-foreground overflow-y-auto custom-scrollbar selection:bg-primary/20 selection:text-primary-foreground font-serif">
+        <div className="absolute inset-0 w-full h-full bg-[#050505] text-amber-50 overflow-y-auto custom-scrollbar selection:bg-amber-900/50 selection:text-amber-100 font-inter">
             {/* Background Texture */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--color-muted)_0%,_var(--color-background)_100%)] opacity-80 pointer-events-none fixed"></div>
-            <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none fixed" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(245,158,11,0.05)_0%,_transparent_100%)] pointer-events-none fixed"></div>
 
             <div className="relative z-10 max-w-5xl mx-auto px-6 py-12">
 
                 {/* Header */}
-                <div className="flex items-center justify-between mb-12">
-                    <button onClick={() => router.push('/')} className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors bg-secondary/40 px-4 py-2 rounded-full border border-border">
-                        <ChevronLeft className="w-4 h-4" />
-                        <span className="font-mono text-xs uppercase tracking-widest">Flee to Hub</span>
+                <div className="flex items-center justify-between mb-12 border-b border-amber-900/30 pb-6">
+                    <button onClick={() => router.push('/')} className="flex items-center gap-2 text-stone-400 hover:text-amber-400 transition-colors bg-[#0a0a0a] px-5 py-2.5 rounded-full border border-amber-900/30 hover:border-amber-500/50 group">
+                        <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                        <span className="font-cinzel text-xs font-bold uppercase tracking-widest">Flee to Hub</span>
                     </button>
-                    <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-foreground via-muted-foreground to-foreground drop-shadow-md">Forge Your Hero</h1>
-                    <div className="w-[124px]"></div> {/* Spacer for symmetry */}
+                    <h1 className="text-4xl md:text-5xl font-bold tracking-widest font-cinzel text-amber-50 drop-shadow-[0_2px_10px_rgba(245,158,11,0.3)] uppercase">Forge Your Hero</h1>
+                    <div className="w-[140px]"></div> {/* Spacer for symmetry */}
                 </div>
 
                 {/* AI Generator Section */}
-                <div className="mb-10 bg-card border border-border rounded-2xl p-6 shadow-lg relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[100px] rounded-full pointer-events-none translate-x-1/2 -translate-y-1/2"></div>
-                    <div className="flex flex-col md:flex-row gap-4 items-end relative z-10">
-                        <div className="flex-1 w-full">
-                            <label className="block text-xs font-mono tracking-[0.2em] text-primary uppercase mb-3 flex items-center gap-2">
-                                <Sparkles className="w-4 h-4" />
+                <div className="mb-10 bg-[#0a0a0a] border border-amber-900/30 rounded-2xl p-8 shadow-[0_10px_30px_rgba(0,0,0,0.8)] relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 blur-[100px] rounded-full pointer-events-none translate-x-1/2 -translate-y-1/2 group-hover:bg-amber-500/10 transition-colors duration-700"></div>
+                    <div className="flex flex-col md:flex-row gap-5 items-end relative z-10">
+                        <div className="flex-1 w-full relative">
+                            <label className="block text-xs font-cinzel font-bold tracking-[0.2em] text-amber-500 uppercase mb-3 flex items-center gap-2">
+                                <Sparkles className="w-4 h-4 drop-shadow-[0_0_5px_rgba(245,158,11,0.8)]" />
                                 Generate with AI
                             </label>
                             <input
@@ -265,13 +264,13 @@ export default function CreateHeroPage() {
                                 value={aiPrompt}
                                 onChange={e => setAiPrompt(e.target.value)}
                                 placeholder="Describe your hero... e.g. 'A grumpy dwarven priest who worships the god of forge'."
-                                className="w-full bg-input/50 border border-border rounded-lg px-4 py-3 font-serif text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+                                className="w-full bg-[#050505] border border-amber-900/30 rounded-xl px-5 py-4 font-inter text-amber-50 placeholder:text-stone-600 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-all shadow-inner"
                             />
                         </div>
                         <button
                             onClick={generateWithAI}
                             disabled={isGenerating || !aiPrompt.trim()}
-                            className="px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground border-transparent rounded-lg font-bold font-mono tracking-widest uppercase shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap"
+                            className="px-8 py-4 bg-gradient-to-r from-amber-700 via-amber-600 to-amber-700 hover:from-amber-600 hover:to-amber-500 text-amber-50 border border-amber-500/50 rounded-xl font-bold font-cinzel tracking-[0.15em] uppercase shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:shadow-[0_0_25px_rgba(245,158,11,0.4)] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 whitespace-nowrap"
                         >
                             {isGenerating ? 'Weaving Spell...' : 'Generate Profile'}
                         </button>
@@ -284,56 +283,59 @@ export default function CreateHeroPage() {
                     <div className="lg:col-span-7 space-y-8">
 
                         {/* Core Details (Name, Alignment, Background) */}
-                        <div className="bg-card border border-border rounded-2xl p-6 shadow-xl relative overflow-hidden space-y-5">
-                            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-border to-transparent"></div>
+                        <div className="bg-[#0a0a0a] border border-amber-900/30 rounded-2xl p-8 shadow-[0_10px_30px_rgba(0,0,0,0.8)] relative overflow-hidden space-y-6">
+                            <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
 
                             <div>
-                                <label className="block text-xs font-mono tracking-[0.2em] text-primary uppercase mb-2">Hero Name</label>
+                                <label className="block text-xs font-cinzel font-bold tracking-[0.2em] text-amber-500 uppercase mb-3">Hero Name</label>
                                 <input
                                     type="text"
                                     value={name}
                                     onChange={e => setName(e.target.value)}
                                     placeholder="Enter a legendary name..."
-                                    className="w-full bg-input border border-border rounded-lg px-4 py-3 text-2xl font-serif text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+                                    className="w-full bg-[#050505] border border-amber-900/30 rounded-xl px-5 py-4 text-2xl font-cinzel font-bold text-amber-50 placeholder:text-stone-600 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-all shadow-inner"
                                     maxLength={32}
                                 />
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                 <div>
-                                    <label className="block text-xs font-mono tracking-[0.2em] text-primary uppercase mb-2">Alignment</label>
-                                    <select
-                                        value={alignment}
-                                        onChange={e => setAlignment(e.target.value)}
-                                        className="w-full bg-input border border-border rounded-lg px-4 py-3 font-serif text-foreground focus:outline-none focus:border-primary transition-colors appearance-none"
-                                    >
-                                        <option value="Lawful">Lawful</option>
-                                        <option value="Neutral">Neutral</option>
-                                        <option value="Chaotic">Chaotic</option>
-                                    </select>
+                                    <label className="block text-xs font-cinzel font-bold tracking-[0.2em] text-amber-500 uppercase mb-3">Alignment</label>
+                                    <div className="relative">
+                                        <select
+                                            value={alignment}
+                                            onChange={e => setAlignment(e.target.value)}
+                                            className="w-full bg-[#050505] border border-amber-900/30 rounded-xl px-5 py-4 font-inter text-amber-50 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-all appearance-none shadow-inner"
+                                        >
+                                            <option value="Lawful">Lawful</option>
+                                            <option value="Neutral">Neutral</option>
+                                            <option value="Chaotic">Chaotic</option>
+                                        </select>
+                                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-500 pointer-events-none" />
+                                    </div>
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-xs font-mono tracking-[0.2em] text-primary uppercase mb-2">Background Origin</label>
+                                <label className="block text-xs font-cinzel font-bold tracking-[0.2em] text-amber-500 uppercase mb-3">Background Origin</label>
                                 <textarea
                                     value={background}
                                     onChange={e => setBackground(e.target.value)}
                                     placeholder="Where did this hero come from?"
-                                    className="w-full bg-input border border-border rounded-lg px-4 py-3 font-serif text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors h-24 resize-none custom-scrollbar"
+                                    className="w-full bg-[#050505] border border-amber-900/30 rounded-xl px-5 py-4 font-inter text-amber-50 placeholder:text-stone-600 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-all h-28 resize-none custom-scrollbar shadow-inner"
                                 />
                             </div>
                         </div>
 
                         {/* Ancestry Selection */}
-                        <div className="bg-card border border-border rounded-2xl p-6 shadow-xl">
-                            <h2 className="text-xl font-bold mb-6 text-foreground">Ancestry</h2>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+                        <div className="bg-[#0a0a0a] border border-amber-900/30 rounded-2xl p-8 shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
+                            <h2 className="text-2xl font-cinzel font-bold mb-6 text-amber-50 uppercase tracking-wider">Ancestry</h2>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
                                 {(Object.values(Ancestry) as Ancestry[]).map((anc) => (
                                     <button
                                         key={anc}
                                         onClick={() => setSelectedAncestry(anc)}
-                                        className={`px-4 py-3 rounded-xl border text-sm font-medium transition-all ${selectedAncestry === anc ? 'bg-primary text-primary-foreground border-transparent shadow-md' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80 border-transparent'}`}
+                                        className={`px-4 py-4 rounded-xl border text-sm font-cinzel font-bold tracking-widest uppercase transition-all duration-300 ${selectedAncestry === anc ? 'bg-amber-500/10 text-amber-400 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'bg-[#050505] text-stone-400 border-amber-900/20 hover:border-amber-900/50 hover:text-stone-200'}`}
                                     >
                                         {ANCESTRIES[anc].name}
                                     </button>
@@ -341,34 +343,35 @@ export default function CreateHeroPage() {
                             </div>
 
                             {/* Selected Ancestry Details */}
-                            <div className="bg-secondary/20 border border-border rounded-lg p-5">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <h3 className="text-lg font-bold text-foreground">{ANCESTRIES[selectedAncestry].name}</h3>
-                                    <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-primary/20 text-primary border border-primary/30">
+                            <div className="bg-[#050505] border border-amber-900/30 rounded-xl p-6 shadow-inner relative overflow-hidden">
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-transparent via-amber-500/50 to-transparent"></div>
+                                <div className="flex items-center gap-4 mb-3">
+                                    <h3 className="text-xl font-cinzel font-bold text-amber-50 drop-shadow-sm">{ANCESTRIES[selectedAncestry].name}</h3>
+                                    <span className="px-2.5 py-1 rounded text-[10px] font-cinzelfont-bold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/30">
                                         Trait: {ANCESTRIES[selectedAncestry].feature}
                                     </span>
                                 </div>
-                                <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                                <p className="text-sm text-stone-400 font-inter leading-relaxed mb-4">
                                     {ANCESTRIES[selectedAncestry].description}
                                 </p>
-                                <div className="text-xs font-mono text-muted-foreground">
-                                    <span className="text-muted-foreground">LANGUAGES:</span> {ANCESTRIES[selectedAncestry].languages.join(', ')}
+                                <div className="text-xs font-cinzel tracking-widest text-amber-700/80">
+                                    <span className="font-bold">LANGUAGES:</span> <span className="text-stone-300 font-inter tracking-normal">{ANCESTRIES[selectedAncestry].languages.join(', ')}</span>
                                 </div>
                             </div>
                         </div>
 
                         {/* Class Selection */}
-                        <div className="bg-card border border-border rounded-2xl p-6 shadow-xl">
-                            <h2 className="text-xl font-bold mb-6 text-foreground">Class</h2>
-                            <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-[#0a0a0a] border border-amber-900/30 rounded-2xl p-8 shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
+                            <h2 className="text-2xl font-cinzel font-bold mb-6 text-amber-50 uppercase tracking-wider">Class</h2>
+                            <div className="grid grid-cols-2 gap-5">
                                 {(Object.values(HeroClass) as HeroClass[]).map((hc) => (
                                     <button
                                         key={hc}
                                         onClick={() => setSelectedClass(hc)}
-                                        className={`flex flex-col items-center justify-center py-6 rounded-xl border transition-all ${selectedClass === hc ? 'bg-primary text-primary-foreground border-transparent shadow-md' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80 border-transparent'}`}
+                                        className={`flex flex-col items-center justify-center p-6 rounded-xl border transition-all duration-300 ${selectedClass === hc ? 'bg-amber-500/10 text-amber-400 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'bg-[#050505] text-stone-400 border-amber-900/20 hover:border-amber-900/50 hover:text-stone-200'}`}
                                     >
-                                        <span className="text-lg font-bold mb-1">{hc}</span>
-                                        <span className="text-xs font-mono text-current opacity-80 text-center px-2 mt-1">
+                                        <span className="text-xl font-cinzel font-bold mb-2 uppercase tracking-widest">{hc}</span>
+                                        <span className={`text-xs font-inter opacity-80 text-center px-2 ${selectedClass === hc ? 'text-amber-100/90' : 'text-stone-500'}`}>
                                             {hc === 'Fighter' ? 'd8 HP • Any Weapon' : hc === 'Priest' ? 'd6 HP • Divine Magic' : hc === 'Thief' ? 'd4 HP • Stealth & Finesse' : 'd4 HP • Arcane Magic'}
                                         </span>
                                     </button>
@@ -379,24 +382,24 @@ export default function CreateHeroPage() {
                     </div>
 
                     {/* RIGHT COLUMN: Stats & Action */}
-                    <div className="lg:col-span-5 space-y-6">
+                    <div className="lg:col-span-5 space-y-8">
 
                         {/* Stats Panel */}
-                        <div className="bg-card border border-border rounded-2xl p-6 shadow-xl relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-[80px] rounded-full pointer-events-none"></div>
+                        <div className="bg-[#0a0a0a] border border-amber-900/30 rounded-2xl p-8 shadow-[0_10px_30px_rgba(0,0,0,0.8)] relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-40 h-40 bg-amber-500/5 blur-[80px] rounded-full pointer-events-none"></div>
 
-                            <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-start justify-between mb-8">
                                 <div>
-                                    <h2 className="text-xl font-bold text-foreground">Attributes</h2>
-                                    <p className="text-xs text-muted-foreground mt-1">Roll or customize manual attributes</p>
+                                    <h2 className="text-2xl font-cinzel font-bold text-amber-50 uppercase tracking-wider">Attributes</h2>
+                                    <p className="text-xs text-stone-500 font-inter mt-2 leading-relaxed">Customize your fundamental capabilities</p>
                                 </div>
-                                <div className={`px-4 py-2 rounded-lg border text-xs font-mono tracking-widest uppercase shadow-inner flex items-center gap-2 ${availablePoints > 0 ? 'bg-primary/20 border-primary/50 text-primary' : availablePoints < 0 ? 'bg-destructive/20 border-destructive/50 text-destructive' : 'bg-muted/50 border-border text-muted-foreground'}`}>
+                                <div className={`px-4 py-2 rounded-lg border text-xs font-cinzel font-bold tracking-[0.15em] uppercase shadow-inner flex items-center gap-2 ${availablePoints > 0 ? 'bg-amber-500/10 border-amber-500/40 text-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.1)]' : availablePoints < 0 ? 'bg-red-900/20 border-red-500/50 text-red-400' : 'bg-[#050505] border-amber-900/30 text-stone-400'}`}>
                                     <Sparkles className="w-4 h-4" />
                                     {availablePoints > 0 ? `${availablePoints} Pts Available` : availablePoints < 0 ? `Over budget: ${Math.abs(availablePoints)}` : 'Points Assigned'}
                                 </div>
                             </div>
 
-                            <div className="space-y-1 bg-secondary/20 p-4 rounded-xl border border-border">
+                            <div className="space-y-1 bg-[#050505] p-5 rounded-xl border border-amber-900/20 shadow-inner">
                                 <StatRow label="STR" value={stats.str} min={limits.str.min} max={limits.str.max} availablePoints={availablePoints} onChange={(v) => handleStatChange('str', v)} />
                                 <StatRow label="DEX" value={stats.dex} min={limits.dex.min} max={limits.dex.max} availablePoints={availablePoints} onChange={(v) => handleStatChange('dex', v)} />
                                 <StatRow label="CON" value={stats.con} min={limits.con.min} max={limits.con.max} availablePoints={availablePoints} onChange={(v) => handleStatChange('con', v)} />
@@ -407,13 +410,17 @@ export default function CreateHeroPage() {
                         </div>
 
                         {/* Summary Block */}
-                        <div className="bg-card border border-border rounded-2xl p-6 shadow-2xl relative">
-                            <h3 className="text-sm font-mono tracking-widest text-primary uppercase mb-4 text-center">Hero Summary</h3>
+                        <div className="bg-[#0a0a0a] border border-amber-900/30 rounded-2xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.9)] relative overflow-hidden backdrop-blur-xl group hover:border-amber-500/40 transition-colors duration-500">
+                            <h3 className="text-xs font-cinzel tracking-[0.2em] text-amber-500 font-bold uppercase mb-6 text-center">Hero Summary</h3>
 
-                            <div className="flex justify-between items-end mb-8 border-b border-border pb-4">
+                            <div className="flex justify-between items-end mb-10 border-b border-amber-900/30 pb-6">
                                 <div>
-                                    <div className="text-3xl font-bold text-foreground mb-1">{name || 'Unnamed'}</div>
-                                    <div className="text-muted-foreground text-sm">Level 1 {alignment} {selectedAncestry} {selectedClass}</div>
+                                    <div className="text-3xl font-cinzel font-bold text-amber-50 mb-2 drop-shadow-sm">{name || 'Unnamed'}</div>
+                                    <div className="text-stone-400 font-inter text-sm flex items-center gap-2">
+                                        <span className="text-amber-700/80">LVL 1</span>
+                                        <span className="w-1 h-1 rounded-full bg-stone-600"></span>
+                                        {alignment} {selectedAncestry} {selectedClass}
+                                    </div>
                                 </div>
                             </div>
 
@@ -422,10 +429,10 @@ export default function CreateHeroPage() {
                                 disabled={isSaving || availablePoints !== 0 || !name.trim()}
                                 className="w-full relative group perspective-1000 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                <div className="absolute -inset-1 rounded-lg bg-gradient-to-r from-primary via-primary/80 to-primary/60 opacity-60 group-hover:opacity-100 transition duration-500 blur-md"></div>
-                                <div className="relative bg-card border border-primary/50 text-foreground py-4 flex items-center justify-center gap-3 transition-transform duration-300 group-hover:scale-[0.98] group-active:scale-95 shadow-inner">
-                                    <Save className="w-5 h-5 text-primary" />
-                                    <span className="font-bold font-mono tracking-widest text-foreground uppercase">
+                                <div className="absolute -inset-[2px] rounded-xl bg-gradient-to-r from-amber-600 via-amber-400 to-amber-700 opacity-40 group-hover:opacity-100 transition duration-700 blur-[8px] group-hover:blur-[12px]"></div>
+                                <div className="relative bg-[#050505] border border-amber-900/50 rounded-xl py-5 flex items-center justify-center gap-4 transition-all duration-500 group-hover:bg-[#0a0a0a] shadow-inner transform group-active:scale-[0.98]">
+                                    <Save className="w-5 h-5 text-amber-500 group-hover:text-amber-400 transition-colors duration-500" />
+                                    <span className="font-bold font-cinzel tracking-[0.2em] text-amber-50 uppercase drop-shadow-sm">
                                         {isSaving ? 'Forging...' : 'Enter the Dungeon'}
                                     </span>
                                 </div>

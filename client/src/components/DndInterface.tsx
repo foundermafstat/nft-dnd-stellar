@@ -93,7 +93,7 @@ export default function DndInterface({ playerId }: DndInterfaceProps) {
 
     return (
         <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} collisionDetection={pointerWithin}>
-            <div className="flex flex-col h-screen w-full bg-[#0a0806] text-stone-200 overflow-hidden font-sans">
+            <div className="flex flex-col h-screen w-full bg-[#050505] text-amber-50 overflow-hidden font-inter selection:bg-amber-900/50 selection:text-amber-100">
                 {/* Global Header */}
                 <Header />
 
@@ -101,7 +101,7 @@ export default function DndInterface({ playerId }: DndInterfaceProps) {
                 <ResizablePanelGroup direction="horizontal" className="flex-1 w-full h-full">
 
                     {/* Left Panel: Game Canvas Area */}
-                    <ResizablePanel defaultSize={60} minSize={30} className="relative h-full flex flex-col">
+                    <ResizablePanel defaultSize={60} minSize={30} className="relative h-full flex flex-col bg-[#0a0a0a]">
 
                         {/* The 3D Canvas */}
                         <div className="w-full h-full relative cursor-crosshair">
@@ -119,10 +119,10 @@ export default function DndInterface({ playerId }: DndInterfaceProps) {
                     </ResizablePanel>
 
                     {/* Central Handle */}
-                    <ResizableHandle withHandle className="bg-border w-1.5 hover:bg-amber-900/50 hover:w-2 transition-all" />
+                    <ResizableHandle withHandle className="bg-amber-900/30 w-1.5 hover:bg-amber-500/50 hover:w-2 transition-all" />
 
                     {/* Right Panel: Interaction & Chat */}
-                    <ResizablePanel defaultSize={40} minSize={25} className="h-full flex flex-col">
+                    <ResizablePanel defaultSize={40} minSize={25} className="h-full flex flex-col bg-[#050505] border-l border-amber-900/20 shadow-[-10px_0_30px_rgba(0,0,0,0.5)]">
                         <InteractionPanel triggerRoll={triggerRoll} />
                     </ResizablePanel>
 
@@ -135,8 +135,8 @@ export default function DndInterface({ playerId }: DndInterfaceProps) {
                 easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
             }}>
                 {activeDragId ? (
-                    <div className="opacity-90 scale-105 pointer-events-none rotate-3">
-                        <div className="inline-flex items-center gap-2 bg-amber-600 border border-amber-400 text-black px-3 py-1.5 rounded-full text-xs font-serif font-bold shadow-2xl">
+                    <div className="opacity-95 scale-105 pointer-events-none rotate-3">
+                        <div className="inline-flex items-center gap-3 bg-gradient-to-r from-amber-700 to-amber-600 border border-amber-400 text-amber-50 px-4 py-2 rounded-xl text-xs font-cinzel font-bold tracking-widest uppercase shadow-[0_10px_30px_rgba(245,158,11,0.5)] backdrop-blur-md">
                             {activeDragSource === 'chat' ? '🛍️ Grabbing Loot...' : '⚔️ Using Item...'}
                         </div>
                     </div>
