@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { renderLocation, renderPlayer, isTileWalkable } from '@/lib/tileRenderer';
+import { renderLocation, renderPlayer, renderFogOfWar, isTileWalkable } from '@/lib/tileRenderer';
 import { findPath, PathNode } from '@/lib/pathfinding';
-import { LocationMap, LocationExit, TileType } from 'shared';
+import { LocationMap, LocationExit, TileType, CombatState, CombatEntity } from 'shared';
 import TransitionModal from './TransitionModal';
 import Tooltip from './Tooltip';
 import NpcDialog from './NpcDialog';
+import CombatOverlay from './CombatOverlay';
 
 interface PlayerNode {
     id: string;
@@ -53,6 +54,10 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
     const [npcs, setNpcs] = useState<NpcNode[]>([]);
     const [hoveredEntity, setHoveredEntity] = useState<HoveredEntity | null>(null);
     const [activeNpc, setActiveNpc] = useState<NpcNode | null>(null);
+
+    // Combat state
+    const [combatState, setCombatState] = useState<CombatState | null>(null);
+    const targetSelectCallback = useRef<((targetId: string) => void) | null>(null);
 
     // Pathfinding state
     const [previewPath, setPreviewPath] = useState<PathNode[]>([]);
@@ -286,6 +291,9 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
         const tileX = Math.floor((clickX + camX) / TILE_SIZE);
         const tileY = Math.floor((clickY + camY) / TILE_SIZE);
 
+        const distToHero = Math.sqrt(Math.pow(myPosRef.current.tileX - tileX, 2) + Math.pow(myPosRef.current.tileY - tileY, 2));
+        if (distToHero > 6) return; // Cannot interact with Fog of War
+
         // Cancel current walk if clicking while moving
         if (walkingRef.current) {
             walkingRef.current = false;
@@ -346,6 +354,13 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
 
         const tileX = Math.floor((mouseX + camX) / TILE_SIZE);
         const tileY = Math.floor((mouseY + camY) / TILE_SIZE);
+
+        const distToHero = Math.sqrt(Math.pow(myPosRef.current.tileX - tileX, 2) + Math.pow(myPosRef.current.tileY - tileY, 2));
+        if (distToHero > 6) {
+            setHoveredEntity(null);
+            setPreviewPath([]);
+            return;
+        }
 
         // Check NPC hover
         const npc = npcAtTile(tileX, tileY);
@@ -584,6 +599,9 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
             // Draw local player
             renderPlayer(ctx, myPos.tileX, myPos.tileY, myColor.current, TILE_SIZE, camX, camY, true);
 
+            // Draw Fog of War over everything (except the HUD)
+            renderFogOfWar(ctx, myPos.tileX, myPos.tileY, TILE_SIZE, camX, camY, canvas.width, canvas.height, 6);
+
             // HUD
             ctx.font = 'bold 14px serif';
             const textWidth = ctx.measureText(`📍 ${locationMap.name}`).width;
@@ -647,6 +665,23 @@ export default function GameCanvas({ playerId }: GameCanvasProps) {
                     npcName={activeNpc.name}
                     npcTitle={activeNpc.title}
                     onClose={() => setActiveNpc(null)}
+                />
+            )}
+
+            {/* Combat Overlay */}
+            {combatState && combatState.status !== 'VICTORY' && combatState.status !== 'DEFEAT' && (
+                <CombatOverlay
+                    combatState={combatState}
+                    playerId={myId.current}
+                    characterId={myId.current}
+                    onCombatUpdate={(state) => setCombatState(state)}
+                    onCombatEnd={(result) => {
+                        console.log('Combat ended:', result);
+                        setTimeout(() => setCombatState(null), 3000);
+                    }}
+                    onSelectTarget={(callback) => {
+                        targetSelectCallback.current = callback;
+                    }}
                 />
             )}
         </>

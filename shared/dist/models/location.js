@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WALKABLE_TILES = exports.TileType = void 0;
+// Tile types for schematic dungeon/location rendering
 var TileType;
 (function (TileType) {
     TileType[TileType["Void"] = 0] = "Void";
@@ -22,11 +23,16 @@ var TileType;
     TileType[TileType["Tree"] = 16] = "Tree";
     TileType[TileType["Water"] = 17] = "Water";
     TileType[TileType["Rug"] = 18] = "Rug";
+    TileType[TileType["Cobblestone"] = 19] = "Cobblestone";
+    TileType[TileType["Bridge"] = 20] = "Bridge";
 })(TileType || (exports.TileType = TileType = {}));
+// Which tiles can be walked on
 exports.WALKABLE_TILES = new Set([
     TileType.Floor,
     TileType.Door,
     TileType.Chair,
     TileType.Staircase,
     TileType.Rug,
+    TileType.Cobblestone,
+    TileType.Bridge,
 ]);

@@ -18,9 +18,15 @@ import { ALL_SEED_ITEMS, CLASS_STARTER_ITEMS } from './game/itemSeeds';
 import { ALL_SEED_ABILITIES } from './game/abilitySeeds';
 import { QuestDirector, QuestActionInput } from './ai/QuestDirector';
 import { generateNpcDialog } from './ai/npcDialog';
-
+import { CombatEngine } from './combat/CombatEngine';
+import { getCombat } from './db/combatQueries';
+import { ScenarioGenerator } from './ai/ScenarioGenerator';
+import { stellarBridge } from './blockchain/StellarBridge';
+import { getRecentChronicles, insertChronicle } from './db/scenarioQueries';
 
 const questDirector = new QuestDirector();
+const combatEngine = new CombatEngine();
+const scenarioGenerator = new ScenarioGenerator();
 
 // Load environment variables from the root .env file
 dotenv.config({ path: '../.env' });
@@ -538,6 +544,186 @@ app.post('/api/quest/finish', async (req, res) => {
         res.json({ success: true });
     } catch (error: any) {
         res.status(500).json({ error: 'Quest finish failed', details: error.message });
+    }
+});
+
+// --- COMBAT ENDPOINTS ---
+
+app.post('/api/combat/start', async (req, res) => {
+    try {
+        const { locationId, players: playerChars, mobs } = req.body;
+        if (!locationId || !playerChars || !mobs) {
+            return res.status(400).json({ error: 'Missing required fields: locationId, players, mobs' });
+        }
+        const state = await combatEngine.startCombat(locationId, playerChars, mobs);
+        if (!state) {
+            return res.status(500).json({ error: 'Failed to start combat' });
+        }
+        res.json({ success: true, combat: state });
+    } catch (error: any) {
+        console.error('Combat start error:', error);
+        res.status(500).json({ error: 'Combat start failed', details: error.message });
+    }
+});
+
+app.get('/api/combat/:id/state', async (req, res) => {
+    try {
+        const state = await getCombat(req.params.id);
+        if (!state) {
+            return res.status(404).json({ error: 'Combat not found' });
+        }
+        res.json({ success: true, combat: state });
+    } catch (error: any) {
+        res.status(500).json({ error: 'Failed to fetch combat state', details: error.message });
+    }
+});
+
+app.post('/api/combat/:id/action', async (req, res) => {
+    try {
+        const { playerId, action } = req.body;
+        if (!playerId || !action) {
+            return res.status(400).json({ error: 'Missing playerId or action' });
+        }
+        let state = await combatEngine.processPlayerAction(req.params.id, playerId, action);
+        if (!state) {
+            return res.status(400).json({ error: 'Invalid action or not your turn' });
+        }
+
+        // After player action, auto-process enemy turns
+        if (state.status === 'IN_PROGRESS') {
+            const activeEntity = state.entities[state.activeEntityId];
+            if (activeEntity && activeEntity.type === 'MOB') {
+                state = await combatEngine.processEnemyTurns(state);
+            }
+        }
+
+        res.json({ success: true, combat: state });
+    } catch (error: any) {
+        console.error('Combat action error:', error);
+        res.status(500).json({ error: 'Combat action failed', details: error.message });
+    }
+});
+
+app.post('/api/combat/:id/end-turn', async (req, res) => {
+    try {
+        const { playerId } = req.body;
+        if (!playerId) {
+            return res.status(400).json({ error: 'Missing playerId' });
+        }
+        let state = await combatEngine.processPlayerAction(req.params.id, playerId, { type: 'END_TURN' });
+        if (!state) {
+            return res.status(400).json({ error: 'Cannot end turn' });
+        }
+
+        // Auto-process enemy turns
+        if (state.status === 'IN_PROGRESS') {
+            const activeEntity = state.entities[state.activeEntityId];
+            if (activeEntity && activeEntity.type === 'MOB') {
+                state = await combatEngine.processEnemyTurns(state);
+            }
+        }
+
+        res.json({ success: true, combat: state });
+    } catch (error: any) {
+        res.status(500).json({ error: 'End turn failed', details: error.message });
+    }
+});
+
+// --- SCENARIO & CHRONICLES ENDPOINTS ---
+
+app.post('/api/scenario/generate', async (req, res) => {
+    try {
+        const { playerIds, sessionId } = req.body;
+        if (!playerIds || !Array.isArray(playerIds)) {
+            return res.status(400).json({ error: 'Missing or invalid playerIds array' });
+        }
+
+        const context = await scenarioGenerator.buildPartyContext(playerIds, sessionId);
+        const scenario = await scenarioGenerator.generateScenario(context);
+
+        if (!scenario) {
+            return res.status(500).json({ error: 'Failed to generate scenario via LLM' });
+        }
+
+        res.json({ success: true, context, scenario });
+    } catch (error: any) {
+        console.error('Scenario generation error:', error);
+        res.status(500).json({ error: 'Scenario generation failed', details: error.message });
+    }
+});
+
+app.post('/api/scenario/apply', async (req, res) => {
+    try {
+        const { context, scenario } = req.body;
+        if (!context || !scenario) {
+            return res.status(400).json({ error: 'Missing context or AI scenario payload' });
+        }
+
+        const locationId = await scenarioGenerator.applyScenario(context, scenario);
+        if (!locationId) {
+            return res.status(500).json({ error: 'Failed to apply scenario to database' });
+        }
+
+        res.json({ success: true, locationId });
+    } catch (error: any) {
+        console.error('Scenario application error:', error);
+        res.status(500).json({ error: 'Scenario application failed', details: error.message });
+    }
+});
+
+app.get('/api/chronicles', async (req, res) => {
+    try {
+        const sessionId = req.query.sessionId as string | undefined;
+        const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
+
+        const chronicles = await getRecentChronicles(limit, sessionId);
+        res.json({ success: true, chronicles });
+    } catch (error: any) {
+        res.status(500).json({ error: 'Failed to retrieve chronicles', details: error.message });
+    }
+});
+
+app.post('/api/chronicles/entry', async (req, res) => {
+    try {
+        const { session_id, location_id, quest_id, event_type, narrative } = req.body;
+
+        if (!event_type || !narrative) {
+            return res.status(400).json({ error: 'Missing required fields: event_type, narrative' });
+        }
+
+        const rawEntry = { session_id, location_id, quest_id, event_type, narrative };
+        const hash = stellarBridge.hashChronicleEntry(rawEntry);
+
+        // Log to database
+        const chronicle = await insertChronicle({
+            ...rawEntry,
+            on_chain_hash: hash
+        });
+
+        // Optionally submit async tx to Soroban (e.g., action index 1)
+        if (session_id) {
+            stellarBridge.submitActionOnChain(Number(session_id), 'ORACLE', 1, hash).catch(err => {
+                console.error('Background Soroban tx failed:', err);
+            });
+        }
+
+        res.json({ success: true, chronicle, hash });
+    } catch (error: any) {
+        res.status(500).json({ error: 'Failed to log chronicle', details: error.message });
+    }
+});
+
+app.post('/api/adventure/init', async (req, res) => {
+    try {
+        const { players, merkleRoots, oracleRoot, fee } = req.body;
+        if (!players || !Array.isArray(players) || !merkleRoots || !oracleRoot) {
+            return res.status(400).json({ error: 'Missing required init parameters' });
+        }
+
+        const success = await stellarBridge.initAdventureOnChain(players, merkleRoots, oracleRoot, fee || 0);
+        res.json({ success });
+    } catch (error: any) {
+        res.status(500).json({ error: 'Failed to initialize adventure on-chain', details: error.message });
     }
 });
 

@@ -1,23 +1,25 @@
 export declare enum TileType {
-    Void = 0,
-    Floor = 1,
-    Wall = 2,
-    Door = 3,
-    Column = 4,
-    Table = 5,
-    Chair = 6,
-    Barrel = 7,
-    Chest = 8,
-    Staircase = 9,
-    Fireplace = 10,
-    Bar = 11,
-    Bed = 12,
-    Bookshelf = 13,
-    Crate = 14,
-    Campfire = 15,
-    Tree = 16,
-    Water = 17,
-    Rug = 18
+    Void = 0,// Empty / out-of-bounds
+    Floor = 1,// Walkable stone floor
+    Wall = 2,// Impassable wall
+    Door = 3,// Passable doorway
+    Column = 4,// Decorative pillar (impassable)
+    Table = 5,// Furniture (impassable)
+    Chair = 6,// Furniture (passable)
+    Barrel = 7,// Container (impassable)
+    Chest = 8,// Loot container (impassable)
+    Staircase = 9,// Zone transition
+    Fireplace = 10,// Light source (impassable)
+    Bar = 11,// Tavern counter (impassable)
+    Bed = 12,// Furniture (impassable)
+    Bookshelf = 13,// Furniture (impassable)
+    Crate = 14,// Container (impassable)
+    Campfire = 15,// Outdoor light source (impassable)
+    Tree = 16,// Outdoor wall equivalent (impassable)
+    Water = 17,// Impassable terrain
+    Rug = 18,// Decorative floor (passable)
+    Cobblestone = 19,// Outdoor stone path (passable)
+    Bridge = 20
 }
 export declare const WALKABLE_TILES: Set<TileType>;
 export interface SpawnPoint {

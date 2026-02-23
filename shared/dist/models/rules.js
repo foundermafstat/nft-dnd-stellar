@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CLASS_MODIFIERS = exports.GameplayConstants = exports.Distance = exports.DifficultyClass = void 0;
+exports.ANCESTRIES = exports.Ancestry = exports.CLASS_MODIFIERS = exports.GameplayConstants = exports.Distance = exports.DifficultyClass = void 0;
 exports.calculateModifier = calculateModifier;
 exports.calculateMaxInventorySlots = calculateMaxInventorySlots;
 exports.xpForNextLevel = xpForNextLevel;
@@ -90,3 +90,21 @@ function calculateMaxInventorySlots(stats, heroClass) {
 function xpForNextLevel(currentLevel) {
     return currentLevel * 10;
 }
+// --- ANCESTRIES ---
+var Ancestry;
+(function (Ancestry) {
+    Ancestry["Dwarf"] = "Dwarf";
+    Ancestry["Elf"] = "Elf";
+    Ancestry["Goblin"] = "Goblin";
+    Ancestry["Halfling"] = "Halfling";
+    Ancestry["HalfOrc"] = "HalfOrc";
+    Ancestry["Human"] = "Human";
+})(Ancestry || (exports.Ancestry = Ancestry = {}));
+exports.ANCESTRIES = {
+    [Ancestry.Dwarf]: { name: 'Dwarf', feature: 'Stout', description: '+2 HP at start. Roll hit points with advantage at every level.', languages: ['Common', 'Dwarvish'] },
+    [Ancestry.Elf]: { name: 'Elf', feature: 'Farsight', description: '+1 bonus to ranged weapon attacks or spellcasting checks.', languages: ['Common', 'Elvish', 'Sylvan'] },
+    [Ancestry.Goblin]: { name: 'Goblin', feature: 'Keen Senses', description: 'Cannot be caught by surprise.', languages: ['Common', 'Goblin'] },
+    [Ancestry.Halfling]: { name: 'Halfling', feature: 'Stealthy', description: 'Once per day, become invisible for 3 rounds.', languages: ['Common'] },
+    [Ancestry.HalfOrc]: { name: 'Half-Orc', feature: 'Mighty', description: '+1 to attack and damage rolls with melee weapons.', languages: ['Common', 'Orcish'] },
+    [Ancestry.Human]: { name: 'Human', feature: 'Ambitious', description: 'Gain one additional talent roll at 1st level.', languages: ['Common', 'One Random'] }
+};

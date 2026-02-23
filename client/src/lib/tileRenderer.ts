@@ -21,6 +21,8 @@ const TILE_COLORS: Record<TileType, string> = {
     [TileType.Tree]: '#1a2a10',
     [TileType.Water]: '#0a1830',
     [TileType.Rug]: '#3a1a1a',
+    [TileType.Cobblestone]: '#2a2622',
+    [TileType.Bridge]: '#4a3020',
 };
 
 const TILE_BORDER_COLORS: Partial<Record<TileType, string>> = {
@@ -33,6 +35,8 @@ const TILE_BORDER_COLORS: Partial<Record<TileType, string>> = {
     [TileType.Tree]: '#2a3a18',
     [TileType.Campfire]: '#d06020',
     [TileType.Water]: '#1a2840',
+    [TileType.Cobblestone]: '#3a3430',
+    [TileType.Bridge]: '#5a4030',
 };
 
 // ── Glow effects ────────────────────────────────────────────────────────
@@ -244,6 +248,16 @@ function drawTileDecoration(ctx: CanvasRenderingContext2D, tile: TileType, px: n
             }
             break;
 
+        case TileType.Bridge:
+            // Draw horizontal wooden planks
+            ctx.fillStyle = '#3a2010'; // Gaps between planks
+            ctx.fillRect(px, py, s, s);
+            ctx.fillStyle = '#6a4020'; // Plank color
+            ctx.fillRect(px, py + s * 0.1, s, s * 0.2);
+            ctx.fillRect(px, py + s * 0.4, s, s * 0.2);
+            ctx.fillRect(px, py + s * 0.7, s, s * 0.2);
+            break;
+
         case TileType.Crate:
             // X on box
             ctx.fillStyle = '#6a5438';
@@ -349,4 +363,37 @@ export function isTileWalkable(map: LocationMap, tileX: number, tileY: number): 
     if (tileX < 0 || tileY < 0 || tileX >= map.width || tileY >= map.height) return false;
     const tile = map.tiles[tileY]?.[tileX];
     return tile !== undefined && WALKABLE_TILES.has(tile);
+}
+
+/**
+ * Renders a dark "Fog of War" overlay that reveals a smooth circle around the player.
+ */
+export function renderFogOfWar(
+    ctx: CanvasRenderingContext2D,
+    heroTileX: number,
+    heroTileY: number,
+    tileSize: number,
+    cameraX: number,
+    cameraY: number,
+    canvasWidth: number,
+    canvasHeight: number,
+    visionRadius: number = 5.5
+) {
+    const px = heroTileX * tileSize - cameraX + tileSize / 2;
+    const py = heroTileY * tileSize - cameraY + tileSize / 2;
+    const r = visionRadius * tileSize;
+
+    ctx.save();
+
+    // Create a radial gradient that is completely transparent at the player,
+    // fading out smoothly to an opaque deep dark fantasy shadow.
+    const grad = ctx.createRadialGradient(px, py, r * 0.4, px, py, r);
+    grad.addColorStop(0, 'rgba(3, 2, 2, 0)'); // Inner circle: fully transparent
+    grad.addColorStop(1, 'rgba(3, 2, 2, 0.96)'); // Outer circle: opaque fog
+
+    // Fill the entire screen. In Canvas, the final color stop (1) spans infinitely outward.
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+    ctx.restore();
 }

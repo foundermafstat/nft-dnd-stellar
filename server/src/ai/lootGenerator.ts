@@ -1,5 +1,5 @@
 import { generateContent } from './openai';
-import { ItemRarity, ItemCategory, Weapon, BiomeType } from 'shared';
+import { ItemRarity, ItemCategory, ItemSubcategory, GameItem, BlockchainStatus, BiomeType } from 'shared';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface LootOutput {
@@ -12,7 +12,7 @@ export interface LootOutput {
 
 export class LootGenerator {
 
-    public async generateChestLoot(biome: BiomeType, playerLevel: number): Promise<Weapon | null> {
+    public async generateChestLoot(biome: BiomeType, playerLevel: number): Promise<GameItem | null> {
         const systemPrompt = `You are the Loot Generator for NFT-DND. Generate a culturally appropriate weapon for the ${biome}. It must sound legendary but fit the low-fantasy DND setting. 
         Output JSON in this exact format:
         { "name": "Name of Weapon", "aiHistory": "Short lore about who forged it or used it.", "category": "Weapon", "rarity": "Common/Uncommon/Rare/Epic/Legendary", "perks": ["+Fire damage", "Glows in dark"] }`;
@@ -24,19 +24,29 @@ export class LootGenerator {
         if (!aiLoot) return null;
 
         // Map AI output to our strict Type System
-        const weapon: Weapon = {
+        const weapon: GameItem = {
             id: uuidv4(),
             name: aiLoot.name,
+            base_type: 'Generated Sword',
             category: ItemCategory.Weapon,
-            weaponSubtype: 'Sword', // Simplified for now, could be dynamic
+            subcategory: ItemSubcategory.Melee,
             rarity: aiLoot.rarity,
-            isNft: false, // Must be explicitly minted on Stellar later
-            attributes: {
-                baseStat: playerLevel * 2,
-                rarityMultiplier: this.getRarityMultiplier(aiLoot.rarity),
-                perks: aiLoot.perks
+            is_nft: false, // Must be explicitly minted on Stellar later
+            blockchain_status: BlockchainStatus.OffChain,
+            cost_gp: Math.floor(playerLevel * 50 * this.getRarityMultiplier(aiLoot.rarity)),
+            slots: 1,
+            stats: {
+                damage: `${Math.max(1, Math.floor(playerLevel / 2))}d6`,
+                properties: []
             },
-            aiHistory: aiLoot.aiHistory
+            bonuses: {
+                attack_bonus: playerLevel,
+                damage_bonus: Math.floor(this.getRarityMultiplier(aiLoot.rarity))
+            },
+            perks: aiLoot.perks,
+            lore: aiLoot.aiHistory,
+            class_restrictions: [],
+            is_template: false
         };
 
         return weapon;

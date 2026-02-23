@@ -19,6 +19,8 @@ export enum TileType {
     Tree = 16,       // Outdoor wall equivalent (impassable)
     Water = 17,      // Impassable terrain
     Rug = 18,        // Decorative floor (passable)
+    Cobblestone = 19,// Outdoor stone path (passable)
+    Bridge = 20,     // Wooden bridge over water (passable)
 }
 
 // Which tiles can be walked on
@@ -28,6 +30,8 @@ export const WALKABLE_TILES = new Set<TileType>([
     TileType.Chair,
     TileType.Staircase,
     TileType.Rug,
+    TileType.Cobblestone,
+    TileType.Bridge,
 ]);
 
 export interface SpawnPoint {

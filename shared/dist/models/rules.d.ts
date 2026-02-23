@@ -35,3 +35,49 @@ export declare function calculateMaxInventorySlots(stats: CharacterStats, heroCl
  * XP Required for the next level
  */
 export declare function xpForNextLevel(currentLevel: number): number;
+export declare enum Ancestry {
+    Dwarf = "Dwarf",
+    Elf = "Elf",
+    Goblin = "Goblin",
+    Halfling = "Halfling",
+    HalfOrc = "HalfOrc",
+    Human = "Human"
+}
+export declare const ANCESTRIES: {
+    Dwarf: {
+        name: string;
+        feature: string;
+        description: string;
+        languages: string[];
+    };
+    Elf: {
+        name: string;
+        feature: string;
+        description: string;
+        languages: string[];
+    };
+    Goblin: {
+        name: string;
+        feature: string;
+        description: string;
+        languages: string[];
+    };
+    Halfling: {
+        name: string;
+        feature: string;
+        description: string;
+        languages: string[];
+    };
+    HalfOrc: {
+        name: string;
+        feature: string;
+        description: string;
+        languages: string[];
+    };
+    Human: {
+        name: string;
+        feature: string;
+        description: string;
+        languages: string[];
+    };
+};
