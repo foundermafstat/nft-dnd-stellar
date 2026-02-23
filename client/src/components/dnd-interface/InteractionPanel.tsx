@@ -18,7 +18,7 @@ export default function InteractionPanel({ triggerRoll }: InteractionPanelProps)
     const [inputText, setInputText] = useState('');
     const [isSendingDialog, setIsSendingDialog] = useState(false);
     const [activeMenu, setActiveMenu] = useState<'inventory' | 'party' | 'playerInfo' | 'skills' | 'dice' | null>(null);
-    const scrollRef = useRef<HTMLDivElement>(null);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // Chat is a dropzone for using items from inventory
     const { setNodeRef: setChatDropRef, isOver: isChatOver } = useDroppable({
@@ -28,10 +28,11 @@ export default function InteractionPanel({ triggerRoll }: InteractionPanelProps)
 
     // Auto-scroll chat to bottom
     useEffect(() => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-        }
-    }, [chatMessages]);
+        // Use a slight delay to allow layout shifts (especially when menus open/close) to complete
+        setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }, 50);
+    }, [chatMessages, activeMenu]);
 
     const handleSend = async () => {
         if (!inputText.trim() || isSendingDialog) return;
@@ -104,7 +105,7 @@ export default function InteractionPanel({ triggerRoll }: InteractionPanelProps)
                     {isChatOver && <span className="text-amber-400 animate-pulse">Drop to Use</span>}
                 </div>
 
-                <ScrollArea className="flex-1 px-5 py-6 bg-[radial-gradient(ellipse_at_top_right,_rgba(245,158,11,0.02)_0%,_transparent_50%)]" ref={scrollRef}>
+                <ScrollArea className="flex-1 px-5 py-6 bg-[radial-gradient(ellipse_at_top_right,_rgba(245,158,11,0.02)_0%,_transparent_50%)]">
                     <div className="space-y-6 pb-4">
                         {chatMessages.map(msg => (
                             <div key={msg.id} className={`flex flex-col ${msg.senderType === 'player' ? 'items-end' : 'items-start'}`}>
@@ -132,6 +133,7 @@ export default function InteractionPanel({ triggerRoll }: InteractionPanelProps)
                                 </div>
                             </div>
                         ))}
+                        <div ref={messagesEndRef} className="h-4" />
                     </div>
                 </ScrollArea>
             </div>
